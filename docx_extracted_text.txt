@@ -1,0 +1,736 @@
+
+ 
+A
+Project Report on
+YASHODA MASALE
+Yashoda SpiceChain AI.
+Submitted in fulfilment of the requirements of the diploma in
+Computer Engineering
+Submitted by
+Miss Vedika Satish Warke
+Miss Sanika Manohar Thale
+Miss Srushti Satish Bhagat
+Mr. Chetan Amit Sonawane
+
+Supervisor:
+Ms.Saniya Mokal
+Department of Computer Engineering
+Mahatma Education Society’s
+Pillai HOC College of Engineering and Technology, Rasayani
+(Diploma Section-1148)
+Tal: Khalapur, Dist: Raigad, PIN Code: 410207
+Academic Year 2026 – 2027
+ 
+Mahatma Education Society
+Pillai HOC College of Engineering and Technology (Diploma section),
+Rasayani, Tal: Khalapur,
+Dist.: Raigad-410207
+Department of Computer Engineering
+
+
+Date:      /      /
+CERTIFICATE
+This is to certify that Miss Vedika Satish Warke from Pillai HOC College of Engineering and Technology, Diploma section (1148) Institute having Enrollment No. 24112270111 has completed the project titled “Yashoda Masale: AI-Enabled Spice Manufacturing, Inventory, Distribution and E-Commerce Management Platform” during the academic year 2026-2027. The project was completed by a group consisting of 4 Candidates under the guidance of  Ms. Saniya Mokal
+
+Name & Signature of Guide
+Name & Signature of HOD
+Name & Signature of Principal
+ 
+Mahatma Education Society
+Pillai HOC College of Engineering and Technology (Diploma section),
+Rasayani, Tal: Khalapur,
+Dist.: Raigad-410207
+Department of Computer Engineering
+
+
+Date:      /      /
+CERTIFICATE
+This is to certify that Miss Sanika Manohar Thale from Pillai HOC College of Engineering and Technology, Diploma section (1148) Institute having Enrollment No. 24112270107 has completed the project titled “Yashoda Masale: AI-Enabled Spice Manufacturing, Inventory, Distribution and E-Commerce Management Platform” during the academic year 2026-2027. The project was completed by a group consisting of 4 Candidates under the guidance of Ms. Saniya Mokal
+
+Name & Signature of Guide
+Name & Signature of HOD
+Name & Signature of Principal
+ 
+Mahatma Education Society
+Pillai HOC College of Engineering and Technology (Diploma section),
+Rasayani, Tal: Khalapur,
+Dist.: Raigad-410207
+Department of Computer Engineering
+
+
+Date:      /      /
+CERTIFICATE
+This is to certify that Miss Srushti Satish Bhagat from Pillai HOC College of Engineering and Technology, Diploma section (1148) Institute having Enrollment No. 24112270099 has completed the project titled “Yashoda Masale: AI-Enabled Spice Manufacturing, Inventory, Distribution and E-Commerce Management Platform” during the academic year 2026-2027. The project was completed by a group consisting of 4 Candidates under the guidance of Ms. Saniya Mokal
+
+Name & Signature of Guide
+Name & Signature of HOD
+Name & Signature of Principal
+ 
+Mahatma Education Society
+Pillai HOC College of Engineering and Technology (Diploma section),
+Rasayani, Tal: Khalapur,
+Dist.: Raigad-410207
+Department of Computer Engineering
+
+
+Date:      /      /
+CERTIFICATE
+This is to certify that Mr. Chetan Amit Sonawane from Pillai HOC College of Engineering and Technology, Diploma section (1148) Institute having Enrollment No. 25112270317 has completed the project titled “Yashoda Masale: AI-Enabled Spice Manufacturing, Inventory, Distribution and E-Commerce Management Platform” during the academic year 2026-2027. The project was completed by a group consisting of 4 Candidates under the guidance of Ms. Saniya Mokal
+
+Name & Signature of Guide
+Name & Signature of HOD
+Name & Signature of Principal
+DECLARATION
+We declare that this written submission represents our ideas in our own words and where other’s ideas or words have been included, we adequately cite and reference the original sources. We also declare that we have adhered to all principles of academic honesty and integrity and have not misrepresented or fabricated or falsified any idea/data/fact/source in our submission. We understand that any violation of the above will be cause for disciplinary action by the Institute and can also evoke penal action from the sources which have thus not been properly cited or from whom proper permission has not been taken when needed.
+Vedika Satish Warke
+Sanika Manohar Thale
+Srushti Satish Bhagat
+Chetan Amit Sonawane
+(Signatures)
+Date:
+Dissertation Approval for Diploma
+The Dissertation report entitled “YASHODA MASALE: AI-ENABLED SPICE MANUFACTURING, INVENTORY, DISTRIBUTION AND E-COMMERCE MANAGEMENT PLATFORM” by Miss Vedika Satish Warke, Miss Sanika Manohar Thale, Miss Srushti Satish Bhagat and Mr. Chetan Amit Sonawane is approved for the diploma in Computer Engineering.
+Examiners:
+1…………………………………………….
+2…………………………………………….
+Date:
+Place: Rasayani
+Index
+Acknowledgementi
+Abstractii
+List of Figuresiii
+
+Sr.noTitlePage.No.
+1Introduction1
+2Problem Definition and Objectives2
+3Scope of the Project3
+4Existing and Proposed System4
+5System Architecture5
+6Business Workflow8
+7User Roles and Functional Modules10
+8Database and API Design12
+9Artificial Intelligence Modules15
+10Technology Stack and Development Tools17
+1124-Week Development Roadmap17
+12Team Work Allocation18
+13Testing and Evaluation19
+14Security, Privacy and Data Handling20
+15Expected Outcomes, Limitations and Future Scope21
+Conclusion22
+References22
+ 
+ACKNOWLEDGEMENT
+We would like to take this opportunity to thank everyone who provided valuable advice and guidance, without which this project would not have been completed. We thank all who have helped us directly or indirectly, but some in particular have to be singled out because they have given us more than just guidance.
+We wish to express our deep respect and thankfulness to our project guide,Ms.Saniya Mokal
+Without the guidance, insightful comments, encouragement and valuable help, this work would not have been a success.
+We are grateful to the Head of the Department of Computer Engineering, the Principal and the teaching and non-teaching staff of Pillai HOC College of Engineering and Technology, Rasayani (Diploma Section), for providing the facilities and support needed to complete this project.
+We also thank Yashoda Masale, the sponsor business, for giving us a real-world spice manufacturing, distribution and e-commerce problem to work on.
+Finally, we thank our parents, friends and classmates for their constant encouragement, and our teachers, who taught us the skills this project is built on.
+ABSTRACT
+Small and medium-sized spice manufacturers and distributors often manage products, production batches, stock, expiry dates and dealer orders in separate spreadsheets, paper records or disconnected applications. This makes it difficult to find accurate stock, trace the source of a batch, prevent dispatch of held goods or prepare consistent reports. Yashoda Masale proposes a web-first management platform that connects raw-material receipt, factory production records, quality release, inventory, dealer, distributor and consumer orders, dispatch and batch traceability in one system.
+The platform is designed with a Next.js frontend, a FastAPI backend and a PostgreSQL database. It supports six roles (Owner, Factory Manager, Warehouse Manager, Distributor, Dealer and Consumer) with permissions enforced on the server. Finished stock is tracked by product, batch and warehouse, and First-Expired, First-Out (FEFO) selection ensures that only released, unexpired batches are reserved and dispatched. Each batch carries a QR code that opens a public traceability page showing recorded batch events.
+A business-focused AI layer provides demand forecasting evaluated against a baseline, reorder and expiry-risk recommendations, a retrieval-augmented assistant grounded in approved product information, a dealer reorder agent that prepares draft orders for human approval, and restricted natural-language analytics. Manufacturing remains a human-operated factory process; the software records and supports it. The prototype is planned over 24 weeks by a team of four and will be demonstrated and evaluated using clearly labelled synthetic data.
+LIST OF FIGURES
+Fig No.Figure NamePage No.
+5.1Proposed high-level system architecture6
+5.2Level 0 data flow diagram (context diagram)7
+5.3Level 1 data flow diagram8
+6.1Factory-to-consumer workflow recorded by the platform9
+7.1Use case diagram12
+8.1Entity relationship (ER) diagram14
+9.1AI decision-support flow with backend validation and human approval15
+ 
+CHAPTER 1
+INTRODUCTION
+Yashoda Masale is the working name for a proposed digital platform intended to support a spice business across its factory operations, warehouse, distributors, dealers and consumers. The system will connect product information, manufacturing records, quality decisions, inventory, orders, traceability and business analytics through a common web-based application.
+The physical manufacturing of spices will be carried out by workers in the factory using the factory's actual processes and equipment. The software will not manufacture, blend, grind or package spices. Its purpose is to record and manage the work performed by people, enforce business rules, maintain traceable records and provide useful information for operational decisions.
+The project is designed as a final-year Computer Engineering system with conventional web development, database management, software engineering and selected AI capabilities. It will first be developed as a web application. A future mobile application can reuse the same backend APIs.
+1.1 Need of the Project
+Small and medium-sized manufacturing and distribution businesses may manage product details, production batches, stock, expiry dates, dealer orders and customer requests using separate spreadsheets, paper records or disconnected applications. This can make it difficult to find accurate stock, identify the source of a batch, prevent dispatch of held goods, or prepare consistent business reports.
+A shared digital platform can reduce repeated data entry, improve visibility across departments, and provide a consistent record from raw-material receipt to dispatch. AI features can support forecasting and decision-making, but the final operational decisions remain with authorized people.
+1.2 Project Overview
+The proposed platform contains a secure enterprise portal, a consumer-facing online store, B2B dealer and distributor functions, factory and warehouse workflows, QR-based traceability, dashboards and a business-focused AI layer. For academic testing, the team will use synthetic demonstration data clearly identified as simulated.
+1.3 Important Scope Clarification
+Manufacturing is a human-operated factory process. Workers perform cleaning, grinding, blending and packaging. The application records production plans, stages, material usage, quality inspection outcomes and batch status. It may assist managers with reports and recommendations, but it does not physically manufacture products.
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 2
+PROBLEM DEFINITION AND OBJECTIVES
+2.1 Problem Definition
+The main problem is the lack of one connected, reliable workflow for managing a spice business from raw-material receipt through factory production, quality release, inventory, dealer and consumer orders, dispatch and traceability. Disconnected records can cause inconsistent stock figures, weak batch visibility, delayed reporting and inefficient replenishment decisions.
+The project will develop a web-first management platform that maintains structured records and applies validation rules across these workflows. It will also provide selected AI tools for demand forecasting, reorder recommendations, grounded question answering and natural-language business analytics.
+2.2 Objectives
+Develop secure login and role-based access for the owner, factory manager, warehouse manager, distributor, dealer and consumer.
+Maintain product variants, categories and MRP, dealer and distributor price lists.
+Record raw-material receipt, production plans, batch stages and quality inspection decisions performed by factory personnel.
+Track finished stock by product, batch and warehouse, including expiry dates and stock movements.
+Apply FEFO (First-Expired, First-Out) selection to eligible batches and prevent dispatch of held, rejected or expired stock.
+Support consumer orders, B2B bulk orders, reservations, invoices, dispatch and order tracking.
+Provide QR-based batch traceability using recorded events.
+Implement business dashboards, explainable demand forecasting, reorder recommendations and a hosted-LLM-based assistant.
+Evaluate AI features using documented synthetic datasets, baseline comparisons and appropriate metrics.
+Deploy and document a reproducible prototype suitable for demonstration and academic assessment.
+2.3 Measurable Success Criteria
+All six roles can access only their permitted screens and records.
+An unapproved or held batch cannot be dispatched.
+Inventory balances remain consistent during order reservation, cancellation, dispatch and return operations.
+A QR page displays the correct recorded batch events without exposing private business information.
+Forecasting results are compared with a baseline on a chronological held-out test set.
+The AI agent prepares a draft order and requires the appropriate user approval before submission.
+The application can be run from documented setup instructions and demonstrated with labelled synthetic data.
+
+
+
+
+
+
+
+
+CHAPTER 3
+SCOPE OF THE PROJECT
+3.1 Included Scope
+Web portal for owner, factory, warehouse, distributor and dealer workflows.
+Consumer storefront with catalogue, cart, checkout simulation and order tracking.
+Product, pricing, supplier, raw-material, batch, quality, inventory and warehouse records.
+Order management, stock reservation, FEFO picking, invoices and shipment status.
+Batch QR traceability and role-specific business dashboards.
+Business AI: demand forecasting, reorder and expiry-risk recommendations, RAG assistant, dealer reorder drafts and restricted natural-language analytics.
+Automated tests, synthetic-data scripts, documentation and cloud deployment.
+3.2 Excluded or Optional Scope
+Automated physical manufacturing or control of factory machinery.
+Claiming guaranteed product authenticity from an image or QR scan alone.
+Live integration with the sponsor's factory ERP, payment provider or WhatsApp unless separately approved and available.
+Blockchain, ONDC integration, computer-vision inspection and Hindi/Marathi voice ordering as optional extensions.
+Claims of real-world revenue increase or expiry-loss reduction based solely on synthetic-data experiments.
+3.3 Assumptions
+The team will not rely on access to real sponsor records. Product names, quantities, prices, batch records, dealers, sales history and reviews will be simulated for demonstration and testing. The final report will label these data as synthetic. Any legal, food-labelling or compliance output must be reviewed against current applicable requirements before being represented as compliant.
+CHAPTER 4
+EXISTING AND PROPOSED SYSTEM
+4.1 Existing Approach
+In a disconnected or manual workflow, product catalogues, manufacturing notes, quality records, stock spreadsheets, dealer orders and invoices may be stored separately. Such a setup can require repeated data entry and manual reconciliation. The project does not assume that Yashoda Masale currently uses a particular system; this describes a common problem that should be confirmed with the sponsor.
+4.2 Proposed System
+The proposed platform centralizes business records in PostgreSQL and exposes role-specific workflows through a web interface. The backend validates permissions and business rules. The AI layer consumes approved data and returns forecasts, recommendations or answers. Sensitive actions remain controlled by normal application logic and authorized human approval.
+Area
+Proposed improvement
+Records
+Centralized structured records with identifiers and audit history.
+Factory workflow
+Production and quality outcomes entered by authorized factory staff.
+Inventory
+Batch-level quantities, expiry dates, stock movements and FEFO selection.
+Commerce
+Shared order lifecycle for B2B and consumer sales.
+Traceability
+QR page based on recorded batch and dispatch events.
+Decision support
+Dashboards, forecast evaluation and AI recommendations.
+Security
+Server-enforced role and record-level permissions.
+
+
+
+
+
+CHAPTER 5
+SYSTEM ARCHITECTURE
+The application follows a simple layered architecture. The Next.js frontend displays role-specific workflows. FastAPI provides REST endpoints, authentication, permission checks and business logic. PostgreSQL stores operational records. Separate Python AI services handle forecasting and selected AI tasks. A hosted LLM provider is accessed through a server-side adapter so the provider can be selected later.
+
+Figure 5.1: Proposed high-level system architecture.
+5.1 Main Layers
+Presentation layer: Next.js, React and TypeScript pages, forms, charts and QR views.
+Application layer: FastAPI endpoints, request validation, authorization and workflow rules.
+Data layer: PostgreSQL tables, foreign keys, constraints, transactions and audit logs.
+AI layer: forecasting models, retrieval of approved knowledge, constrained business tools and hosted LLM calls.
+Storage and deployment layer: product images, generated documents, environment secrets, backups and HTTPS.
+5.2 Request Flow
+A user signs in and the server establishes the authenticated session or token.
+The frontend requests data through documented API endpoints.
+The backend checks the user's role and access to the specific record.
+Business operations update the database using validated transactions.
+For an AI request, the backend retrieves only data permitted for that user and invokes the appropriate AI service.
+The application returns a result, explanation or draft for review; sensitive actions require normal authorization and approval.
+5.3 Data Flow Diagrams
+Figure 5.2 is the Level 0 (context) diagram. The whole platform is shown as a single process that exchanges data with six external entities: the Owner/Admin, Factory Manager, Warehouse Manager, Dealer/Distributor, Consumer and the hosted LLM provider. Each entity sends its own records or requests to the platform and receives the corresponding results, such as batch status, order status or alerts.
+
+Figure 5.2: Level 0 data flow diagram (context diagram).
+Figure 5.3 expands the platform into seven processes: user and access management, catalogue and pricing, production and quality records, inventory with FEFO and expiry control, order processing and dispatch, batch QR traceability, and the AI analytics and assistant process. The processes read and write six data stores. The production, inventory and order stores are drawn twice where more than one process uses them, so that the flow lines do not cross.
+
+Figure 5.3: Level 1 data flow diagram.
+CHAPTER 6
+BUSINESS WORKFLOW
+The core workflow connects factory work with inventory and sales. Factory staff physically perform production operations. The application records the operations and quality decisions, and it controls which batch status is eligible for sale and dispatch.
+
+Figure 6.1: Factory-to-consumer workflow recorded by the platform.
+6.1 Detailed Workflow
+Raw-material receipt: an authorized user records supplier, material, lot, quantity, receipt date and relevant storage information.
+Production planning: the factory manager creates a production plan and records the planned product and quantities.
+Production execution: workers perform cleaning, grinding, blending and packaging. Authorized staff record stages, inputs and actual output.
+Quality inspection: staff enter the required measurements and approve, hold or reject the batch according to the configured quality process.
+Finished stock: only an eligible, released batch becomes sellable stock. Inventory is recorded by product, batch and warehouse.
+Order creation: a dealer, distributor or consumer creates an order under the applicable price and order rules.
+Reservation and picking: the system checks available stock and selects the earliest-expiring eligible batch under FEFO.
+Dispatch and delivery: authorized staff record packing, dispatch and delivery events. Inventory and order status are updated consistently.
+Traceability: the batch QR page displays recorded and permitted events for that batch.
+6.2 FEFO Rule
+FEFO means First-Expired, First-Out. When multiple eligible batches can fulfil an order, the system prioritizes the batch with the earliest expiry date. Batches that are expired, held, rejected or not released must be excluded. The selection and stock reservation should occur transactionally to prevent two orders from reserving the same quantity.
+6.3 Returns and Cancellations
+Cancellation should release any applicable reservation exactly once. Returned goods should not automatically become sellable stock; an authorized quality or warehouse decision must determine whether the returned quantity can be returned to available inventory, held for inspection or written off.
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 7
+USER ROLES AND FUNCTIONAL MODULES
+Role
+Primary responsibilities
+Owner / Super Admin
+Manage users and permissions, view business-wide metrics, configure price lists and review audit records.
+Factory Manager
+Manage raw materials, production plans, batch records and quality decisions.
+Warehouse Manager
+Manage warehouses, stock movements, expiry alerts, picking, packing and dispatch.
+Distributor
+View permitted price lists, create bulk orders, view assigned dealer/order information and invoices.
+Dealer / Retailer
+Browse assigned prices, create and repeat orders, view own invoices and receive reorder suggestions.
+Consumer
+Browse products, manage cart, place orders, view own order status, submit reviews and view public batch traceability.
+
+7.1 Authentication and Access Control
+The backend must check permissions for every protected endpoint and for every requested record. Hiding a screen or button in the frontend is not a security control. Public consumer registration must not allow a user to self-assign an owner or factory-manager role.
+7.2 Product and Price Management
+Products include categories, descriptions, pack sizes, images, active status and variants. Price lists should define MRP, dealer price and distributor price. The price actually applied to an order item should be stored as a snapshot so later price changes do not rewrite historical orders.
+7.3 Manufacturing and Quality Records
+The platform stores the production plan, batch identifier, raw-material lots used, recorded production stages, planned and actual output, responsible staff, inspection results and final status. Quality parameters and acceptance limits must be configured from validated business or technical requirements, not invented as actual factory standards.
+7.4 Inventory and Warehouse Management
+Inventory is tracked by product, batch and warehouse. Stock movements record receipts, production output, reservations, releases, dispatches, returns and adjustments. Low-stock and expiry alerts support the warehouse team. A stock ledger and transactional updates provide an auditable explanation for balance changes.
+7.5 Commerce and Orders
+Consumer and B2B orders share a validated order lifecycle. The system records order items, price snapshots, reservations, invoice status, payment status and shipment events. For the academic prototype, payment status may be simulated; sensitive payment-card information is not collected or stored.
+7.6 QR Traceability
+Each batch receives a unique public token encoded in a QR code. The public page shows approved information such as product, batch code, production date, quality release event and recorded dispatch timeline. Private supplier details, customer addresses and internal business information are not exposed. A QR match is a database lookup and is not proof by itself that a physical package is authentic.
+7.7 Use Case Diagram
+Figure 7.1 shows the main use cases of the six roles. The Distributor, Dealer and Consumer share the common buyer functions of browsing the catalogue, placing an order and tracking it, so they are drawn as specialisations of a Registered Buyer. Placing an order includes reserving stock using FEFO, and dispatching an order includes verifying that the batch is released. Approving a dealer reorder draft extends the draft created by the AI agent, which keeps the human approval step explicit.
+
+Figure 7.1: Use case diagram.
+
+
+
+
+
+
+
+
+
+CHAPTER 8
+DATABASE AND API DESIGN
+8.1 Main Database Entities
+Entity group
+Representative tables
+Identity
+users, roles, permissions, user_roles, role_permissions
+Catalogue
+products, categories, product_variants, price_lists, price_list_items
+Procurement
+suppliers, raw_materials, purchase_orders, goods_receipts, raw_material_lots
+Production
+production_plans, production_batches, batch_materials, production_stages, quality_checks
+Inventory
+warehouses, inventory_balances, stock_movements, stock_reservations
+Partners
+distributors, dealers, dealer_assignments
+Commerce
+orders, order_items, invoices, payment_records, shipments, returns
+Traceability
+batch_qr_records, batch_events, verification_scans
+AI and audit
+sales_forecasts, forecast_evaluations, reorder_recommendations, ai_tool_runs, audit_logs
+
+8.2 Database Design Rules
+Use unique identifiers and foreign keys for related records.
+Use fixed-precision decimal values for money.
+Keep a stock-movement history instead of silently overwriting inventory balances.
+Store batch manufacture date, expiry date and quality-release status.
+Use database transactions for stock reservation, dispatch and cancellation.
+Record actor, timestamp and relevant changes for sensitive actions.
+Use synthetic data only and document the generation assumptions.
+
+
+
+
+8.3 API Design
+The backend exposes versioned REST endpoints under /api/v1. API contracts should define input fields, response fields, validation errors and required permissions. FastAPI's generated API documentation can help the frontend and backend members coordinate.
+API area
+Example endpoints
+Authentication
+POST /auth/login; GET /auth/me
+Products
+GET /products; POST /products; PATCH /products/{id}
+Production
+POST /production-plans; POST /batches; POST /batches/{id}/quality-checks
+Inventory
+GET /inventory; GET /inventory/expiring; GET /inventory/movements
+Orders
+POST /orders; GET /orders/{id}; POST /orders/{id}/cancel
+Warehouse
+POST /orders/{id}/reserve; POST /orders/{id}/dispatch
+Traceability
+GET /traceability/{public_token}
+Analytics
+GET /analytics/sales; GET /analytics/slow-moving
+AI
+POST /ai/forecasts/run; POST /ai/chat; POST /ai/business-query
+Dealer agent
+POST /ai/reorder-drafts; POST /ai/reorder-drafts/{id}/approve
+
+8.4 API Security
+Protected endpoints must enforce authentication, role and record-level permissions. Critical operations should use idempotency safeguards where appropriate. The backend should reject invalid order-state transitions, insufficient stock, unapproved batches and unauthorized price access. AI-generated query requests must be mapped to approved query templates or constrained tools rather than arbitrary SQL.
+8.5 Entity Relationship Diagram
+Figure 8.1 gives a simplified entity relationship view of the core tables listed in section 8.1. Primary keys are shown in bold and foreign keys in colour. A user holds one role and places many orders; each order contains many order items for a product; each product is produced as many batches; each batch has quality checks and traceability events and is stocked in warehouses through inventory balances, whose changes are recorded as stock movements. Supporting tables such as suppliers, invoices, shipments and audit logs are omitted from the figure for clarity.
+
+Figure 8.1: Entity relationship (ER) diagram.
+
+
+
+
+
+
+CHAPTER 9
+ARTIFICIAL INTELLIGENCE MODULES
+AI is used for business intelligence and assistance, not physical manufacturing. The proposed AI priority is business-focused: forecasting, reorder and expiry-risk recommendations, a grounded assistant, dealer order drafting and natural-language analytics. The system uses synthetic data, so evaluation results will demonstrate prototype behavior rather than real factory performance.
+
+Figure 9.1: AI decision-support flow with backend validation and human approval.
+9.1 Demand Forecasting
+The forecasting module predicts future demand by product from simulated sales history. A simple seasonal-naive or moving-average model should be used as a baseline, then compared with a candidate model. The dataset must be split chronologically so future observations do not leak into training.
+Report Mean Absolute Error (MAE), Root Mean Squared Error (RMSE) and Mean Absolute Percentage Error (MAPE) where appropriate. MAPE can be misleading when actual values are zero or very small, so it should not be reported without explaining this limitation. The model should display the forecast period, predicted quantity, relevant trend or seasonal signals and limitations.
+9.2 Reorder Recommendations
+A reorder recommendation combines forecast demand, lead time, safety stock, available stock and reserved stock. The recommendation explains the inputs that triggered it. It is a suggestion for an authorized person to review, not an automatic purchase or stock adjustment.
+9.3 Expiry-Risk Decision Support
+The system can compare eligible stock with estimated demand before expiry and flag batches that may remain unsold. The first implementation can use transparent rules; a learned model should be added only if the data and evaluation justify it. Suggested actions may include prioritizing eligible dispatch or asking an authorized manager to review a promotion.
+9.4 Grounded Yashoda AI Assistant
+A retrieval-augmented generation (RAG) assistant retrieves approved product information, FAQs, recipes and policies before generating an answer using a hosted language-model API. It should indicate when approved information is unavailable and should not invent ingredient, health or compliance claims. Business and order data require authenticated, permission-aware retrieval.
+9.5 Dealer Reorder Agent
+A dealer may ask the system to prepare a repeat monthly order. The agent retrieves the authenticated dealer's history, checks current permitted prices and eligible stock, and proposes a draft. The backend validates the draft and an authorized user approves submission. The agent must not bypass price rules, permissions, stock constraints or approval requirements.
+9.6 Natural-Language Business Queries
+An administrator may ask questions such as 'Which products were slow-moving last quarter?' The system maps the request to a limited, validated analytics function and displays the result as a chart or table. It should show the selected time period and metric definition, and must not allow the LLM to run arbitrary SQL.
+9.7 Synthetic Data and Evaluation
+The team will generate labelled demonstration records for sales, stock, orders and reviews. The data-generation process, assumptions and random seed should be documented. AI metrics should be computed on a held-out test set and compared with a baseline. Any example statements such as a festival increasing demand must be labelled as a simulated signal unless supported by real evidence.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 10
+TECHNOLOGY STACK AND DEVELOPMENT TOOLS
+Component
+Technology
+Purpose
+Frontend
+Next.js, React, TypeScript
+Web interfaces and dashboards
+Backend
+Python, FastAPI
+REST APIs and business logic
+Database
+PostgreSQL
+Transactional and reporting records
+Data processing
+Python, pandas
+Synthetic data generation and preprocessing
+Machine learning
+scikit-learn
+Forecast baselines and model evaluation
+LLM integration
+Hosted LLM API behind an adapter
+RAG assistant, constrained business tools
+Search
+PostgreSQL text search; pgvector if needed
+Product and knowledge retrieval
+Charts
+Recharts or equivalent
+Sales and forecast visualizations
+Testing
+pytest and frontend tests
+Unit, API and integration testing
+Deployment
+Docker and GitHub Actions
+Reproducible builds and deployment
+Storage
+S3-compatible object storage
+Images and generated documents
+
+The team should begin with a modular monolith rather than multiple microservices. PostgreSQL is the source of truth for business data. Additional infrastructure such as Redis or Kubernetes is optional and should be introduced only if the team can explain its need.
+
+
+
+
+
+
+
+CHAPTER 11
+24-WEEK DEVELOPMENT ROADMAP
+Weeks
+Activities
+Milestone
+1–2
+Requirements, scope, user stories, synthetic-data assumptions
+PRD/SRS draft and backlog
+3–4
+Wireframes, ER diagram, architecture and API contracts
+Approved design
+5–6
+Repository, migrations, authentication, roles and catalogue
+Secure foundation
+7–9
+Suppliers, raw materials, production batches and quality workflow
+Factory records work end-to-end
+10–12
+Warehouse stock, stock ledger, FEFO, reservations and expiry
+Reliable inventory
+13–15
+Consumer store, B2B orders, invoices and order tracking
+End-to-end ordering
+16
+QR traceability and dashboards
+Visible batch journey
+17–19
+Synthetic sales dataset, forecasting and reorder recommendations
+Evaluated AI forecast
+20–21
+RAG assistant, constrained business queries and dealer reorder drafts
+AI business tools with approval
+22
+Deployment, secrets, HTTPS, backups and integration tests
+Staging deployment
+23
+Bug fixes, test report, documentation and release candidate
+Acceptance tests passed
+24
+Final demo, report, presentation and viva practice
+Submission-ready prototype
+
+11.1 Weekly Team Routine
+Hold one weekly planning and integration meeting.
+Every member demonstrates a working increment at the end of the week.
+Use pull requests and code review before merging to the main branch.
+Keep API contracts and database migrations synchronized.
+Start integration tests early; do not postpone integration until the final month.
+Freeze optional features during the final two weeks unless a critical fix requires change.
+
+
+CHAPTER 12
+TEAM WORK ALLOCATION
+Member
+Primary ownership
+Key deliverables
+Member 1
+Frontend and UX
+Role dashboards, product catalogue, dealer portal, consumer storefront, forms and charts.
+Member 2
+Backend, database and security
+FastAPI, PostgreSQL schema, authentication, permissions, manufacturing, inventory, orders and APIs.
+Member 3
+AI/ML
+Synthetic data, forecasting, evaluation, reorder logic, RAG, business tools and AI documentation.
+Member 4
+Integration, QA and deployment
+Docker, CI/CD, staging, integration tests, release checklist, backups, logging and documentation coordination.
+
+All members share responsibility for testing, code review, documentation and final presentation. Member 4 coordinates integration and release readiness, but every member must test their own modules. The team should avoid a design in which one member alone understands deployment or one member alone understands the database.
+12.1 Integration Dependencies
+AI forecasting depends on a stable sales-history schema and reproducible synthetic dataset.
+Reorder recommendations depend on reliable stock balances and reservations.
+QR traceability depends on stable batch IDs and recorded batch events.
+The consumer and B2B interfaces depend on the same authenticated order APIs.
+The AI agent depends on permission-aware tools and validated order-draft endpoints.
+
+
+CHAPTER 13
+TESTING AND EVALUATION
+13.1 Functional Testing
+Test area
+Test scenario
+Expected result
+Permissions
+Dealer requests an owner-only report
+Request is denied
+Quality
+Held batch is selected for dispatch
+Dispatch is blocked
+FEFO
+Two eligible batches have different expiry dates
+Earlier-expiring eligible batch is prioritized
+Stock
+Two orders compete for insufficient stock
+No overselling occurs
+Cancellation
+Reserved order is cancelled
+Reservation is released once
+QR
+Unknown batch token is opened
+No false verification is displayed
+AI answer
+Question has no approved source
+Assistant says information is unavailable
+Agent
+Proposed order exceeds available stock
+Draft is constrained or flagged and not submitted
+Business analytics
+User requests another dealer’s private data
+Permission-aware access is enforced
+Deployment
+Application is restarted
+Data persists and services recover
+
+13.2 Unit and Integration Testing
+Unit tests should cover pricing, state transitions, FEFO selection, stock arithmetic and reorder calculations. Integration tests should cover order creation, reservation, dispatch, cancellation, invoice generation and stock changes. Permission tests should attempt both allowed and disallowed operations. The team should include invalid input, duplicate requests, missing records and concurrent stock scenarios.
+13.3 AI Evaluation
+Forecasting evaluation should compare at least one baseline with the selected model using chronological train/test separation. The report should include the dataset-generation method, test period, MAE, RMSE and an appropriately interpreted MAPE where valid. RAG and agent testing should include questions with missing sources, prompt-injection attempts, unauthorized data requests and invalid business actions. AI outputs should be treated as untrusted until validated by backend rules.
+13.4 Acceptance Criteria
+All six roles have defined permissions and tested access boundaries.
+Approved production batches become eligible stock; held or rejected batches do not.
+Stock and order status remain consistent during reservation, dispatch and cancellation.
+The QR page shows correct, permitted batch events.
+At least one forecasting model is evaluated against a documented baseline.
+The hosted LLM adapter supports the selected provider without exposing credentials to the frontend.
+The dealer agent requires confirmation and authorization before order submission.
+The deployed prototype can be reproduced using the documented setup guide.
+
+
+
+
+
+
+
+
+
+
+
+
+CHAPTER 14
+SECURITY, PRIVACY AND DATA HANDLING
+Store hosted LLM API keys only in backend environment secrets or a secret manager.
+Use HTTPS in the deployed environment and restrict database network access.
+Do not commit credentials, private data or production secrets to source control.
+Enforce role and record-level permissions on the server for every protected operation.
+Limit public QR pages to approved traceability fields.
+Record sensitive approvals, pricing changes and stock adjustments in audit logs.
+Use labelled synthetic data; do not present it as real sponsor data.
+Treat LLM responses as untrusted content and validate all tool arguments on the server.
+Configure backups and verify that restoration is possible.
+Do not describe a generated label as legally compliant until applicable requirements are validated.
+
+
+
+
+
+
+
+
+
+CHAPTER 15
+EXPECTED OUTCOMES, LIMITATIONS AND FUTURE SCOPE
+15.1 Expected Outcomes
+A single web-first prototype connecting factory records, warehouse inventory, B2B distribution and consumer orders.
+Improved visibility of batches, quality decisions, expiry dates and dispatch events.
+Consistent stock and order tracking with transaction-safe workflows.
+Batch QR pages that display recorded traceability events.
+Business dashboards and measurable AI forecast results using synthetic data.
+A grounded AI assistant and dealer reorder draft workflow with human approval.
+Academic documentation, test evidence, deployment instructions and a repeatable demonstration.
+15.2 Limitations
+All demonstration records are synthetic and do not establish actual performance at Yashoda Masale.
+Forecasting quality depends on the assumptions and patterns encoded in the synthetic data.
+Image-based counterfeit screening is not part of the required core and cannot independently guarantee authenticity.
+Hosted LLM availability, cost, rate limits and data-handling terms depend on the chosen provider.
+Legal, food-label and FSSAI requirements need current validation before operational use.
+External integrations such as WhatsApp, payment gateways and ONDC may require separate accounts, approvals and fees.
+15.3 Future Scope
+Mobile application using the existing backend APIs.
+WhatsApp commerce for dealer repeat orders and order updates.
+Hindi and Marathi voice input/output.
+Computer-vision prototype for packaging defects using a labelled image dataset.
+Enhanced counterfeit-risk signals with scan anomaly analysis.
+ONDC integration after reviewing current technical and operational requirements.
+Blockchain or another tamper-evident ledger if a clear trust requirement is established.
+Carbon-footprint estimates based on documented sourcing, energy and transport assumptions.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CONCLUSION
+The proposed Yashoda Masale platform is a web-first business management system for spice manufacturing, distribution and e-commerce. It links the records created by factory workers with quality release, inventory, FEFO dispatch, dealer orders, consumer shopping and batch traceability. Manufacturing remains a physical process performed by factory workers; the software supports and records that process.
+The business-focused AI layer adds demand forecasting, reorder and expiry-risk recommendations, a grounded assistant, a dealer reorder agent and natural-language analytics. These features will be tested with clearly labelled synthetic data and evaluated with appropriate limitations. The project prioritizes reliable workflows, secure permissions, measurable AI behavior and a reproducible deployment over an excessive number of unfinished features.
+With a 24-week roadmap, four clear workstreams and regular integration gates, the team can produce a coherent final-year prototype that demonstrates software engineering, database design, web development, AI integration, testing and deployment.
+
+
+
+
+
+
+
+
+
+
+REFERENCES
+FastAPI Documentation. https://fastapi.tiangolo.com/
+Next.js Documentation. https://nextjs.org/docs
+PostgreSQL Documentation. https://www.postgresql.org/docs/
+scikit-learn Documentation. https://scikit-learn.org/stable/
+OWASP Application Security Verification Standard. https://owasp.org/www-project-application-security-verification-standard/
+Microsoft, Retrieval-Augmented Generation (RAG) overview. https://learn.microsoft.com/
+Project assumptions and synthetic-data plan prepared for the Yashoda Masale academic prototype.
