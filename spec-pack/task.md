@@ -23,7 +23,7 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 - [x] T-022 (M2) Login, tokens, password reset, role/permission dependencies. Audit log writer.
 - [x] T-023 (M2) Catalogue: categories, products, variants, price lists with role-based price resolver.
 - [ ] T-024 (M1) App shell, login, role-based navigation, design tokens in code.
-- [ ] T-025 (M2/M4) Permission tests for every role on every route (matrix test).
+- [x] T-025 (M2/M4) Permission tests for every role on every route (matrix test).
 **Done when:** each role logs in and sees only its menu; dealer cannot read owner endpoints.
 
 ## M3 — Factory records (Weeks 7–9)

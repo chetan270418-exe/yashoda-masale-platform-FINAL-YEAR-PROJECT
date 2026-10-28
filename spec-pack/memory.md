@@ -6,9 +6,9 @@ Read this at the start of every session. Update it at the end. Keep it short and
 **Yashoda SpiceChain AI** is a web-first platform for the spice business Yashoda Masale. It records raw-material receipt, production batches, quality release, warehouse stock with FEFO, dealer/distributor and consumer orders, and QR batch traceability. A business AI layer adds forecasting, reorder and expiry-risk suggestions, a RAG assistant, a dealer reorder agent and natural-language analytics. It is a Diploma (Computer Engineering) final-year project with a 4-member team and a 24-week plan.
 
 ## 2. Status
-- Current milestone: M2 (Foundation)
-- Last session summary: Completed T-020, T-021, T-022, and T-023 (backend foundation, auth & RBAC, audit log, catalog with role-based price resolver, migrations, and 30 passing tests).
-- Next task: T-025 (Permission matrix test) / T-030 (Factory & Procurement records).
+- Current milestone: M2 (Foundation complete)
+- Last session summary: Completed T-022 auth hardening (login rate limiting, require_roles, deactivated user handling) and T-025 full permission matrix tests across all roles and protected endpoints (74 tests passing).
+- Next task: M3 Factory records — T-030 (Suppliers, raw materials, lots, receipts).
 
 ## 3. Decisions log
 | ID | Decision | Reason |
@@ -55,6 +55,7 @@ Owner/Super Admin, Factory Manager, Warehouse Manager, Distributor, Dealer/Retai
 
 ## 8. Session log (newest first)
 ```
+2026-10-28 | T-022, T-025 | Auth hardening: RateLimiter on /login (HTTP 429), require_roles dependency with alias expansion, deactivated user rejection, owner dealer/distributor account creation, and 40-case permission matrix | backend/app/core/rate_limit.py, backend/app/auth/dependencies.py, backend/tests/test_permissions.py | 74 passed | Next: T-030
 2026-10-28 | T-023 | Catalog module: categories, products, variants, price lists (MRP, DEALER, DISTRIBUTOR), role-based price resolver, price change audit logging, seed script, Alembic migration 0002 | backend/app/catalog/*, alembic/versions/0002_create_catalog_and_price_lists.py, backend/scripts/seed_catalog.py, backend/tests/test_catalog.py | 30 passed | Next: T-025 / T-030
 2026-10-28 | T-020, T-021, T-022 | Initialized backend, auth models (User, Role), JWT auth, RBAC dependencies, audit logging, Alembic migration, role seed script | backend/app/auth/*, backend/app/audit/*, alembic/versions/0001_initial_auth_and_audit.py, backend/tests/test_auth.py | 19 passed | Next: T-023
 YYYY-MM-DD | task id | what changed | files | tests | follow-ups

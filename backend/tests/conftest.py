@@ -8,6 +8,7 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.auth.dependencies import login_rate_limiter
 from app.auth.models import Role, User
 from app.auth.security import hash_password
 from app.catalog.models import PriceList
@@ -34,6 +35,8 @@ _TestSession = sessionmaker(bind=_engine, expire_on_commit=False)
 
 ROLE_NAMES = [
     "owner",
+    "factory",
+    "warehouse",
     "factory_manager",
     "warehouse_manager",
     "distributor",
@@ -45,6 +48,7 @@ ROLE_NAMES = [
 @pytest.fixture(autouse=True)
 def _setup_db():
     """Create all tables before each test and drop them afterwards."""
+    login_rate_limiter.reset()
     Base.metadata.create_all(bind=_engine)
     # Seed roles and price lists
     session = _TestSession()

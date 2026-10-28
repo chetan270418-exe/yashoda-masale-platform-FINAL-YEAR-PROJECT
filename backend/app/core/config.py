@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     jwt_secret: str = "dev-secret-change-in-production"
     access_token_expire_minutes: int = 30
 
+    # Rate limiting
+    login_rate_limit_max: int = 5
+    login_rate_limit_window_seconds: int = 60
+
 
 @lru_cache
 def get_settings() -> Settings:

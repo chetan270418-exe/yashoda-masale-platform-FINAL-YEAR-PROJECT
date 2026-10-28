@@ -233,3 +233,85 @@ def test_list_users_consumer_forbidden(client, db):
 
     r = client.get("/api/v1/auth/users", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 403
+
+
+# ── Deactivated Account & Rate Limit Tests ────────────────────────────────────
+
+
+def test_login_deactivated_user_rejected(client, db):
+    user = _make_user(db, email="disabled@test.com", password="securepass1", role_name="consumer")
+    user.is_active = False
+    db.commit()
+
+    r = client.post(
+        "/api/v1/auth/login",
+        json={"email": "disabled@test.com", "password": "securepass1"},
+    )
+    assert r.status_code == 403
+    assert r.json()["code"] == "ACCOUNT_DISABLED"
+
+
+def test_me_deactivated_user_rejected(client, db):
+    user = _make_user(db, email="was_active@test.com", password="securepass1", role_name="consumer")
+    token = create_access_token({"sub": str(user.id), "role": "consumer"})
+
+    # User is deactivated after token issue
+    user.is_active = False
+    db.commit()
+
+    r = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 403
+    assert r.json()["code"] == "ACCOUNT_DISABLED"
+
+
+def test_login_rate_limiting_enforced(client):
+    """5 failed or repeated login attempts allowed per window; 6th triggers 429."""
+    for _ in range(5):
+        r = client.post(
+            "/api/v1/auth/login",
+            json={"email": "nobody@test.com", "password": "badpassword"},
+        )
+        assert r.status_code in (401, 200)
+
+    # 6th attempt must be rate-limited with HTTP 429
+    r6 = client.post(
+        "/api/v1/auth/login",
+        json={"email": "nobody@test.com", "password": "badpassword"},
+    )
+    assert r6.status_code == 429
+    body = r6.json()
+    assert body["code"] == "RATE_LIMIT_EXCEEDED"
+    assert "retry_after_seconds" in body["details"]
+
+
+def test_owner_can_create_dealer_and_distributor_accounts(client, db):
+    owner = _make_user(db, email="biz_owner@test.com", password="ownerpass1", role_name="owner")
+    token = create_access_token({"sub": str(owner.id), "role": "owner"})
+
+    # Create dealer
+    r_dealer = client.post(
+        "/api/v1/auth/staff",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "email": "retailer@test.com",
+            "password": "dealerpass1",
+            "full_name": "Spice Retailer",
+            "role_name": "dealer",
+        },
+    )
+    assert r_dealer.status_code == 201
+    assert r_dealer.json()["role_name"] == "dealer"
+
+    # Create distributor
+    r_dist = client.post(
+        "/api/v1/auth/staff",
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "email": "wholesaler@test.com",
+            "password": "distpass1",
+            "full_name": "Regional Wholesaler",
+            "role_name": "distributor",
+        },
+    )
+    assert r_dist.status_code == 201
+    assert r_dist.json()["role_name"] == "distributor"

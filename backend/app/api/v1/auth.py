@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import repository as repo
 from app.auth import service
-from app.auth.dependencies import get_current_user, require_owner
+from app.auth.dependencies import get_current_user, login_rate_limiter, require_owner
 from app.auth.models import User
 from app.auth.schemas import (
     LoginRequest,
@@ -37,9 +37,9 @@ def register(body: UserCreate, db: Session = Depends(get_db)) -> UserRead:
     return _user_to_read(user)
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=TokenResponse, dependencies=[Depends(login_rate_limiter)])
 def login(body: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
-    """Authenticate and receive a JWT."""
+    """Authenticate and receive a JWT. Protected by rate limiting."""
     return service.login(db, body)
 
 
@@ -55,7 +55,7 @@ def create_staff(
     db: Session = Depends(get_db),
     user: User = Depends(require_owner),
 ) -> UserRead:
-    """Owner creates a staff user with an explicit role."""
+    """Owner creates staff, dealer or distributor accounts."""
     new_user = service.create_staff_user(db, body, user)
     return _user_to_read(new_user)
 

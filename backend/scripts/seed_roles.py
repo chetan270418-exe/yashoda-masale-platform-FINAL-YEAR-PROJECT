@@ -14,6 +14,8 @@ from app.core.db import get_engine
 
 ROLE_NAMES = [
     "owner",
+    "factory",
+    "warehouse",
     "factory_manager",
     "warehouse_manager",
     "distributor",

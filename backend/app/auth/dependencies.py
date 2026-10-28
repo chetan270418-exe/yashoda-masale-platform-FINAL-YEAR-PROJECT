@@ -9,8 +9,10 @@ from sqlalchemy.orm import Session
 from app.auth import repository as repo
 from app.auth.models import User
 from app.auth.security import decode_access_token
+from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import AppError
+from app.core.rate_limit import RateLimiter
 
 
 def get_current_user(
@@ -52,18 +54,30 @@ def get_optional_current_user(
     return repo.get_user_by_id(db, payload["sub"])
 
 
-def require_role(*allowed_roles: str) -> Callable[..., User]:
+def require_roles(*allowed_roles: str) -> Callable[..., User]:
     """Return a dependency that rejects users whose role is not in *allowed_roles*.
+
+    Supports role aliases (e.g. 'factory' matches 'factory' or 'factory_manager').
 
     Usage::
 
         @router.get("/admin-only")
-        def admin_view(user: User = Depends(require_role("owner"))):
+        def admin_view(user: User = Depends(require_roles("owner"))):
             ...
     """
+    # Expand aliases
+    expanded = set(allowed_roles)
+    if "factory" in expanded:
+        expanded.add("factory_manager")
+    if "factory_manager" in expanded:
+        expanded.add("factory")
+    if "warehouse" in expanded:
+        expanded.add("warehouse_manager")
+    if "warehouse_manager" in expanded:
+        expanded.add("warehouse")
 
     def _check(user: User = Depends(get_current_user)) -> User:
-        if user.role.name not in allowed_roles:
+        if user.role.name not in expanded:
             raise AppError(
                 "FORBIDDEN",
                 f"Role '{user.role.name}' is not allowed. "
@@ -75,5 +89,15 @@ def require_role(*allowed_roles: str) -> Callable[..., User]:
     return _check
 
 
+# Backwards compatibility alias
+require_role = require_roles
+
 # Reusable singletons for common roles (prevents B008 ruff warning in route signatures)
-require_owner = require_role("owner")
+require_owner = require_roles("owner")
+
+# Rate limiter for login endpoint
+login_rate_limiter = RateLimiter(
+    max_requests=get_settings().login_rate_limit_max,
+    window_seconds=get_settings().login_rate_limit_window_seconds,
+    name="login",
+)
