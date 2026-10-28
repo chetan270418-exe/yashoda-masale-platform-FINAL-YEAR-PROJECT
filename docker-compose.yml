@@ -16,5 +16,18 @@ services:
       timeout: 5s
       retries: 5
 
+  api:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-yashoda_dev}:${POSTGRES_PASSWORD:-local_dev_only}@db:5432/${POSTGRES_DB:-yashoda_masale}
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000}
+      ENVIRONMENT: ${ENVIRONMENT:-local}
+    ports:
+      - "${API_PORT:-8000}:8000"
+
 volumes:
   postgres_data:

@@ -18,10 +18,10 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** design review passed; API contract frozen for v1.
 
 ## M2 — Foundation (Weeks 5–6)
-- [ ] T-020 (M4) Repo, folders, Docker compose, CI (lint, test, build), `.env.example`.
-- [ ] T-021 (M2) Database migrations, user and role tables, seed script skeleton.
-- [ ] T-022 (M2) Login, tokens, password reset, role/permission dependencies. Audit log writer.
-- [ ] T-023 (M2) Catalogue: categories, products, variants, price lists with role-based price resolver.
+- [x] T-020 (M4) Repo, folders, Docker compose, CI (lint, test, build), `.env.example`.
+- [x] T-021 (M2) Database migrations, user and role tables, seed script skeleton.
+- [x] T-022 (M2) Login, tokens, password reset, role/permission dependencies. Audit log writer.
+- [x] T-023 (M2) Catalogue: categories, products, variants, price lists with role-based price resolver.
 - [ ] T-024 (M1) App shell, login, role-based navigation, design tokens in code.
 - [ ] T-025 (M2/M4) Permission tests for every role on every route (matrix test).
 **Done when:** each role logs in and sees only its menu; dealer cannot read owner endpoints.
