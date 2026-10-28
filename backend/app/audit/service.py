@@ -34,3 +34,7 @@ def log_action(
     db.add(entry)
     db.flush()
     return entry
+
+
+# Canonical alias for audit logging
+create_audit_log = log_action

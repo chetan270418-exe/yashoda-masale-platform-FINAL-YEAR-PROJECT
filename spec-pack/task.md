@@ -35,10 +35,10 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** a batch goes from plan to Released and creates stock.
 
 ## M4 — Inventory (Weeks 10–12)
-- [ ] T-040 (M2) Warehouses, balances, stock movements ledger.
-- [ ] T-041 (M2) FEFO selector and reservation service (transactional).
+- [x] T-040 (M2) Warehouses, balances, stock movements ledger.
+- [x] T-041 (M2) FEFO selector and reservation service (transactional).
 - [ ] T-042 (M2) Expiry and low-stock alert queries.
-- [ ] T-043 (M2) Adjustments with reason and audit.
+- [x] T-043 (M2) Adjustments with reason and audit.
 - [ ] T-044 (M1) Warehouse screens: inventory, ledger, expiry, adjustments.
 - [ ] T-045 (M4) Concurrency test: two orders, one unit left. FEFO tests. Held-batch tests.
 **Done when:** no overselling in the concurrency test; FEFO tests pass.

@@ -1,7 +1,7 @@
 """Tests for Inventory ORM models and schema constraints (Step 1)."""
 
 import uuid
-from datetime import date, datetime, timedelta, timezone
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -32,9 +32,7 @@ def test_variant(db: Session) -> ProductVariant:
     db.add(prod)
     db.flush()
 
-    variant = ProductVariant(
-        product_id=prod.id, sku=f"SKU-{uuid.uuid4().hex[:6]}", pack_size_g=500
-    )
+    variant = ProductVariant(product_id=prod.id, sku=f"SKU-{uuid.uuid4().hex[:6]}", pack_size_g=500)
     db.add(variant)
     db.commit()
     return variant
@@ -65,9 +63,7 @@ def test_warehouse_creation_and_unique_code(db: Session, test_warehouse: Warehou
     db.rollback()
 
 
-def test_production_batch_creation_and_status_constraint(
-    db: Session, test_variant: ProductVariant
-):
+def test_production_batch_creation_and_status_constraint(db: Session, test_variant: ProductVariant):
     """Production batches require valid status and expiry >= manufactured_at."""
     today = date.today()
     batch = ProductionBatch(
@@ -250,9 +246,7 @@ def test_order_and_reservation_linkage(
     db.add(reservation)
     db.commit()
 
-    saved_res = db.scalar(
-        select(StockReservation).where(StockReservation.id == reservation.id)
-    )
+    saved_res = db.scalar(select(StockReservation).where(StockReservation.id == reservation.id))
     assert saved_res is not None
     assert saved_res.status == "active"
     assert saved_res.order_item.order.order_number == order.order_number

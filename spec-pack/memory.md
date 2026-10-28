@@ -6,10 +6,9 @@ Read this at the start of every session. Update it at the end. Keep it short and
 **Yashoda SpiceChain AI** is a web-first platform for the spice business Yashoda Masale. It records raw-material receipt, production batches, quality release, warehouse stock with FEFO, dealer/distributor and consumer orders, and QR batch traceability. A business AI layer adds forecasting, reorder and expiry-risk suggestions, a RAG assistant, a dealer reorder agent and natural-language analytics. It is a Diploma (Computer Engineering) final-year project with a 4-member team and a 24-week plan.
 
 ## 2. Status
-- Current milestone: M2 (Foundation complete — all review fixes applied)
-- Last session summary: Fixed all 8 review issues (pinned bcrypt, dropped passlib/python-jose for bcrypt+PyJWT, hardened JWT secret validation, fixed rate-limiter proxy bypass, deactivated-user anonymous fallback, consolidated to 6 roles, added CI PostgreSQL + migration test, cleaned repo). 81 tests passing.
-- Next task: M4 Inventory — T-040 (Warehouses, balances, stock movements ledger). PostgreSQL CI is ready.
-- Note: T-023 (catalog) was built by Chetan but is Srushti's lane. She should take M3 factory records (T-030–T-032) instead.
+- Current milestone: M4 (Inventory — T-040, T-041, T-043 completed, review fixes applied)
+- Last session summary: Fixed review findings in FEFO inventory service: hardened against concurrent race conditions (SQL expression updates on reserved balance preventing overselling), added variant mismatch check, negative min_shelf_days check, inactive warehouse and cancelled order checks, fixed exception hierarchy, made receive_stock idempotent on reference_id, and added 6 new test scenarios (27 inventory tests, 114 suite tests passing).
+- Next task: T-042 (Expiry and low-stock alert queries) or T-045 (Inventory concurrency tests).
 
 ## 3. Decisions log
 | ID | Decision | Reason |
@@ -61,6 +60,8 @@ Owner, Factory, Warehouse, Distributor, Dealer, Consumer (6 canonical, no aliase
 
 ## 8. Session log (newest first)
 ```
+2026-10-28 | T-041, T-043 Review | Review hardening: concurrency race-condition protection (SQL expression reserved update + IntegrityError/StaleDataError catch), variant mismatch check, negative min_shelf_days check, inactive warehouse and cancelled order checks, exception hierarchy cleanup, idempotent receive_stock on reference_id, 6 new test scenarios | backend/app/inventory/service.py, backend/tests/test_inventory_service.py, spec-pack/memory.md | 114 passed | Next: T-042 / T-045
+2026-10-28 | T-041, T-043 | Transactional FEFO inventory service: reserve_stock_fefo with deterministic locking and multi-batch allocation, cancel_reservation and dispatch_reservation with atomic CAS (B1, B6), adjust_stock with reason checks and audit log (B5, T-043), receive_stock helper, comprehensive 21 unit & invariant tests | backend/app/inventory/service.py, backend/tests/test_inventory_service.py, backend/app/audit/service.py | 108 passed | Next: T-042 / T-045
 2026-10-28 | T-040 Step 1 | FEFO Inventory models & migration: Warehouse, ProductionBatch, Order, OrderItem, InventoryBalance, StockReservation, StockMovement with CHECK constraints, unique operation_key idempotency, Alembic migration 0003, warehouse seed script | backend/app/inventory/models.py, backend/alembic/versions/0003_fefo_inventory.py, backend/scripts/seed_inventory.py, backend/tests/test_inventory_models.py | 87 passed | Next: T-041 FEFO service
 2026-10-28 | Review fixes | Pinned bcrypt==4.0.1, dropped passlib/python-jose for bcrypt+PyJWT, hardened JWT secret (reject default in non-local), fixed rate-limiter X-Forwarded-For bypass (TRUST_PROXY_HEADERS), deactivated users treated as anonymous, consolidated to 6 roles (removed factory_manager/warehouse_manager aliases), added CI PostgreSQL service + migration test, removed zip from repo, removed pydantic duplicate | 14 files | 81 passed | Next: T-040 inventory
 2026-10-28 | T-022, T-025 | Auth hardening: RateLimiter on /login (HTTP 429), require_roles dependency with alias expansion, deactivated user rejection, owner dealer/distributor account creation, and 40-case permission matrix | backend/app/core/rate_limit.py, backend/app/auth/dependencies.py, backend/tests/test_permissions.py | 74 passed | Next: T-030
