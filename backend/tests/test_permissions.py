@@ -1,12 +1,12 @@
 """Permission Matrix Tests (T-025).
 
-Systematically tests every role against every protected route:
+Systematically tests every canonical role against every protected route:
 - Anonymous (unauthenticated)
 - Consumer
 - Dealer
 - Distributor
-- Factory Manager
-- Warehouse Manager
+- Factory
+- Warehouse
 - Owner
 
 Verifies that unauthorized access strictly returns HTTP 401 (missing auth) or
@@ -26,8 +26,8 @@ NON_OWNER_ROLES = [
     "consumer",
     "dealer",
     "distributor",
-    "factory_manager",
-    "warehouse_manager",
+    "factory",
+    "warehouse",
 ]
 
 
@@ -56,16 +56,7 @@ def catalog_fixture(db):
 
 
 @pytest.mark.parametrize(
-    "role",
-    [
-        "anonymous",
-        "consumer",
-        "dealer",
-        "distributor",
-        "factory_manager",
-        "warehouse_manager",
-        "owner",
-    ],
+    "role", ["anonymous", "consumer", "dealer", "distributor", "factory", "warehouse", "owner"]
 )
 def test_public_routes_accessible_to_all(client, db, role):
     headers = {}
@@ -93,7 +84,7 @@ def test_me_denied_for_anonymous(client):
 
 
 @pytest.mark.parametrize(
-    "role", ["consumer", "dealer", "distributor", "factory_manager", "warehouse_manager", "owner"]
+    "role", ["consumer", "dealer", "distributor", "factory", "warehouse", "owner"]
 )
 def test_me_allowed_for_any_authenticated_role(client, db, role):
     user = _make_user(db, email=f"{role}_me@test.com", role_name=role)
@@ -129,7 +120,7 @@ def test_create_staff_denied_for_non_owners(client, db, role):
             "email": f"new_{role}@test.com",
             "password": "password123",
             "full_name": "Test Staff",
-            "role_name": "warehouse_manager",
+            "role_name": "warehouse",
         },
     )
     assert r.status_code == 403
@@ -203,7 +194,7 @@ def test_owner_access_allowed_on_all_admin_routes(client, db, catalog_fixture):
             "email": f"allowed_staff_{uuid.uuid4().hex[:6]}@test.com",
             "password": "securepassword",
             "full_name": "Allowed Staff",
-            "role_name": "factory_manager",
+            "role_name": "factory",
         },
     )
     assert r_staff.status_code == 201

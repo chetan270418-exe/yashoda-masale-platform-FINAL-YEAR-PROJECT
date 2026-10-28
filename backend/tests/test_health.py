@@ -43,3 +43,37 @@ def test_db_health_reports_503_in_standard_format_when_db_down():
         app.dependency_overrides.clear()
     assert r.status_code == 503
     assert r.json()["code"] == "DB_UNAVAILABLE"
+
+
+def test_settings_refuses_default_secret_in_production():
+    import pytest
+    from pydantic import ValidationError
+
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError, match="JWT_SECRET must be set"):
+        Settings(environment="production", jwt_secret="dev-secret-change-in-production-key-32")
+
+
+def test_settings_refuses_empty_secret_in_production():
+    import pytest
+    from pydantic import ValidationError
+
+    from app.core.config import Settings
+
+    with pytest.raises(ValidationError, match="JWT_SECRET must be set"):
+        Settings(environment="staging", jwt_secret="")
+
+
+def test_settings_allows_valid_secret_in_production():
+    from app.core.config import Settings
+
+    s = Settings(environment="production", jwt_secret="a-very-long-production-secret-1234567890")
+    assert s.jwt_secret == "a-very-long-production-secret-1234567890"
+
+
+def test_settings_allows_dev_secret_in_local():
+    from app.core.config import Settings
+
+    s = Settings(environment="local", jwt_secret="dev-secret-change-in-production-key-32")
+    assert s.jwt_secret == "dev-secret-change-in-production-key-32"

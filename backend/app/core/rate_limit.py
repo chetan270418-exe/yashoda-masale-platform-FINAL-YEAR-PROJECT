@@ -6,6 +6,7 @@ from collections import defaultdict
 
 from fastapi import Request
 
+from app.core.config import get_settings
 from app.core.errors import AppError
 
 
@@ -34,10 +35,14 @@ class RateLimiter:
         self._lock = threading.Lock()
 
     def __call__(self, request: Request) -> None:
+        settings = get_settings()
         client_ip = request.client.host if request.client else "127.0.0.1"
-        forwarded_for = request.headers.get("X-Forwarded-For")
-        if forwarded_for:
-            client_ip = forwarded_for.split(",")[0].strip()
+
+        # Only trust X-Forwarded-For if explicitly configured to run behind a trusted proxy
+        if settings.trust_proxy_headers:
+            forwarded_for = request.headers.get("X-Forwarded-For")
+            if forwarded_for:
+                client_ip = forwarded_for.split(",")[0].strip()
 
         now = time.time()
         window_start = now - self.window_seconds

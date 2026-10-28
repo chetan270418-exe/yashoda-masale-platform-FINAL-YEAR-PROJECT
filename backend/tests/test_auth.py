@@ -162,18 +162,18 @@ def test_staff_creation_by_owner_works(client, db):
             "email": "factory@test.com",
             "password": "staffpass1",
             "full_name": "Factory Manager",
-            "role_name": "factory_manager",
+            "role_name": "factory",
         },
     )
     assert r.status_code == 201
-    assert r.json()["role_name"] == "factory_manager"
+    assert r.json()["role_name"] == "factory"
 
     # Verify audit log was written (rules.md section 5, FR-AUTH-05)
     audit = db.query(AuditLog).filter_by(action="CREATE_STAFF_USER").first()
     assert audit is not None
     assert audit.actor_id == owner.id
     assert audit.entity == "users"
-    assert audit.after["role"] == "factory_manager"
+    assert audit.after["role"] == "factory"
 
 
 def test_staff_creation_by_non_owner_returns_403(client, db):
@@ -187,7 +187,7 @@ def test_staff_creation_by_non_owner_returns_403(client, db):
             "email": "sneaky@test.com",
             "password": "staffpass1",
             "full_name": "Sneaky",
-            "role_name": "warehouse_manager",
+            "role_name": "warehouse",
         },
     )
     assert r.status_code == 403
@@ -282,6 +282,27 @@ def test_login_rate_limiting_enforced(client):
     body = r6.json()
     assert body["code"] == "RATE_LIMIT_EXCEEDED"
     assert "retry_after_seconds" in body["details"]
+
+
+def test_login_rate_limiting_cannot_be_bypassed_with_spoofed_forwarded_for(client):
+    """Item 4: X-Forwarded-For spoofing is ignored when trust_proxy_headers=False."""
+    # Send 5 attempts with different spoofed X-Forwarded-For IPs
+    for i in range(5):
+        r = client.post(
+            "/api/v1/auth/login",
+            headers={"X-Forwarded-For": f"198.51.100.{i}"},
+            json={"email": "spoof@test.com", "password": "wrong"},
+        )
+        assert r.status_code == 401
+
+    # 6th attempt with yet another spoofed IP must still be blocked
+    r6 = client.post(
+        "/api/v1/auth/login",
+        headers={"X-Forwarded-For": "203.0.113.99"},
+        json={"email": "spoof@test.com", "password": "wrong"},
+    )
+    assert r6.status_code == 429
+    assert r6.json()["code"] == "RATE_LIMIT_EXCEEDED"
 
 
 def test_owner_can_create_dealer_and_distributor_accounts(client, db):

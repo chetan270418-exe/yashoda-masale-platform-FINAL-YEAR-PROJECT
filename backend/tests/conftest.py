@@ -1,12 +1,13 @@
-"""Test fixtures: in-memory SQLite database with seeded roles."""
+"""Test fixtures: supports PostgreSQL in CI / Docker, with in-memory SQLite fallback."""
 
+import os
 import uuid
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy.pool import StaticPool
+from sqlalchemy.pool import NullPool, StaticPool
 
 from app.auth.dependencies import login_rate_limiter
 from app.auth.models import Role, User
@@ -15,34 +16,45 @@ from app.catalog.models import PriceList
 from app.core.db import Base, get_db
 from app.main import app
 
-# SQLite in-memory with StaticPool so all sessions share one connection
-_engine = create_engine(
-    "sqlite://",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool,
-)
-
-
-# Enable FK enforcement on every new SQLite connection
-@event.listens_for(_engine, "connect")
-def _set_sqlite_pragma(dbapi_conn, _record):
-    cursor = dbapi_conn.cursor()
-    cursor.execute("PRAGMA foreign_keys=ON")
-    cursor.close()
-
-
-_TestSession = sessionmaker(bind=_engine, expire_on_commit=False)
-
 ROLE_NAMES = [
     "owner",
     "factory",
     "warehouse",
-    "factory_manager",
-    "warehouse_manager",
     "distributor",
     "dealer",
     "consumer",
 ]
+
+
+def _build_test_engine():
+    """Use PostgreSQL if configured (e.g. CI or local Docker), else in-memory SQLite."""
+    pg_url = os.environ.get("TEST_DATABASE_URL") or os.environ.get("DATABASE_URL", "")
+    if "postgresql" in pg_url:
+        try:
+            pg_engine = create_engine(pg_url, poolclass=NullPool)
+            with pg_engine.connect() as conn:
+                conn.execute(text("SELECT 1"))
+            return pg_engine
+        except Exception:
+            pass
+
+    sqlite_engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+
+    @event.listens_for(sqlite_engine, "connect")
+    def _set_sqlite_pragma(dbapi_conn, _record):
+        cursor = dbapi_conn.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
+    return sqlite_engine
+
+
+_engine = _build_test_engine()
+_TestSession = sessionmaker(bind=_engine, expire_on_commit=False)
 
 
 @pytest.fixture(autouse=True)
@@ -50,7 +62,8 @@ def _setup_db():
     """Create all tables before each test and drop them afterwards."""
     login_rate_limiter.reset()
     Base.metadata.create_all(bind=_engine)
-    # Seed roles and price lists
+
+    # Seed canonical 6 roles and 3 price lists
     session = _TestSession()
     for name in ROLE_NAMES:
         session.add(Role(name=name))
@@ -84,7 +97,7 @@ def db() -> Session:
 
 @pytest.fixture()
 def client():
-    """FastAPI TestClient wired to the in-memory SQLite DB."""
+    """FastAPI TestClient wired to the test DB."""
     app.dependency_overrides[get_db] = _override_get_db
     yield TestClient(app)
     app.dependency_overrides.clear()
@@ -105,7 +118,7 @@ def _make_user(
     assert role is not None, f"Role '{role_name}' not found. Did you seed?"
     user = User(
         id=uuid.uuid4(),
-        email=email.lower(),
+        email=email,
         password_hash=hash_password(password),
         full_name=full_name,
         role_id=role.id,

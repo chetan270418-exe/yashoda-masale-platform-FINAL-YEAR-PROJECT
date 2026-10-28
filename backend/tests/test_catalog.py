@@ -231,6 +231,25 @@ def test_single_product_lookup_resolves_dealer_price(client, db):
     assert Decimal(str(v100_data["price"])) == Decimal("68.00")
 
 
+def test_deactivated_dealer_falls_back_to_mrp(client, db):
+    """Item 5: Deactivated dealers are treated as anonymous and see MRP, not DEALER price."""
+    prod, v100, _ = _setup_spice_catalog(db)
+    dealer = _make_user(db, email="deactivated_dealer@test.com", role_name="dealer")
+    token = create_access_token({"sub": str(dealer.id), "role": "dealer"})
+
+    # Deactivate dealer
+    dealer.is_active = False
+    db.commit()
+
+    r = client.get("/api/v1/products", headers={"Authorization": f"Bearer {token}"})
+    assert r.status_code == 200
+    gm = next(p for p in r.json() if p["id"] == str(prod.id))
+    v100_data = next(v for v in gm["variants"] if v["sku"] == "GM-100G")
+
+    # Must resolve to MRP 85.00, NOT Dealer 68.00
+    assert Decimal(str(v100_data["price"])) == Decimal("85.00")
+
+
 # ── Price Update and Audit Log ────────────────────────────────────────────────
 
 

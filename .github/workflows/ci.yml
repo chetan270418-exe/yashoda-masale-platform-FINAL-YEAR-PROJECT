@@ -8,9 +8,28 @@ on:
 jobs:
   backend:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: yashoda_test
+          POSTGRES_USER: yashoda_test
+          POSTGRES_PASSWORD: test_password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     defaults:
       run:
         working-directory: backend
+    env:
+      DATABASE_URL: postgresql+psycopg://yashoda_test:test_password@localhost:5432/yashoda_test
+      TEST_DATABASE_URL: postgresql+psycopg://yashoda_test:test_password@localhost:5432/yashoda_test
+      ENVIRONMENT: local
+      JWT_SECRET: ci-test-secret-at-least-32-characters-long
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -21,4 +40,4 @@ jobs:
       - run: pip install -r requirements-dev.txt
       - run: ruff check .
       - run: black --check .
-      - run: pytest -q
+      - run: pytest -v

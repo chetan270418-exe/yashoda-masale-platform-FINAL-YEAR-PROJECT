@@ -1,4 +1,4 @@
-"""Seed the six default roles into the database.
+"""Seed the six canonical roles into the database (spec-pack/implementation.md line 16).
 
 Usage:
     python -m scripts.seed_roles
@@ -16,8 +16,6 @@ ROLE_NAMES = [
     "owner",
     "factory",
     "warehouse",
-    "factory_manager",
-    "warehouse_manager",
     "distributor",
     "dealer",
     "consumer",
