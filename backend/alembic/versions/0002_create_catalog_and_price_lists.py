@@ -1,6 +1,6 @@
 """create catalog categories products variants and price_lists tables
 
-Revision ID: 0002_create_catalog_and_price_lists
+Revision ID: 0002_catalog_and_price_lists
 Revises: 0001_initial_auth_and_audit
 Create Date: 2026-10-28 14:40:00.000000
 """
@@ -8,7 +8,7 @@ Create Date: 2026-10-28 14:40:00.000000
 import sqlalchemy as sa
 from alembic import op
 
-revision = "0002_create_catalog_and_price_lists"
+revision = "0002_catalog_and_price_lists"
 down_revision = "0001_initial_auth_and_audit"
 branch_labels = None
 depends_on = None

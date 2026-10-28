@@ -2,7 +2,7 @@
 inventory_balances, stock_reservations, and stock_movements.
 
 Revision ID: 0003_fefo_inventory
-Revises: 0002_create_catalog_and_price_lists
+Revises: 0002_catalog_and_price_lists
 Create Date: 2026-10-28 19:00:00.000000
 """
 
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 from alembic import op
 
 revision = "0003_fefo_inventory"
-down_revision = "0002_create_catalog_and_price_lists"
+down_revision = "0002_catalog_and_price_lists"
 branch_labels = None
 depends_on = None
 
