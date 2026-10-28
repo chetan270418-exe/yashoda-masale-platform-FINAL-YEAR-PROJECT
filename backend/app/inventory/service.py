@@ -13,12 +13,13 @@ from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
-from sqlalchemy import select, update
+from sqlalchemy import case, func, select, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, contains_eager, joinedload
 from sqlalchemy.orm.exc import StaleDataError
 
 from app.audit.service import create_audit_log
+from app.catalog.models import Product, ProductVariant
 from app.core.errors import AppError
 from app.inventory.models import (
     InventoryBalance,
@@ -28,6 +29,7 @@ from app.inventory.models import (
     StockReservation,
     Warehouse,
 )
+from app.inventory.schemas import ExpiringBatchItem, LowStockVariantItem
 
 # Canonical reason categories allowed for manual inventory adjustments
 VALID_ADJUSTMENT_REASONS: frozenset[str] = frozenset(
@@ -671,3 +673,194 @@ def receive_stock(
     except Exception:
         db.rollback()
         raise
+
+
+def get_expiry_alerts(
+    db: Session,
+    warehouse_id: uuid.UUID | str | None = None,
+    days_ahead: int = 30,
+    reference_date: date | None = None,
+) -> list[ExpiringBatchItem]:
+    """Query released batches nearing expiry within days_ahead in active warehouses.
+
+    Enforces:
+    - Only released batches are eligible (B1, B2).
+    - Batches with expiry_date <= CURRENT_DATE + days_ahead.
+    - Balances with available stock > 0 (on_hand - reserved > 0).
+    - Warehouse must be active.
+    - Ordered by expiry_date ASC, batch_code ASC.
+    """
+    if days_ahead < 1 or days_ahead > 365:
+        raise InventoryError(
+            code="INVALID_DAYS_AHEAD",
+            message="days_ahead must be between 1 and 365.",
+            status_code=400,
+        )
+
+    wh_uuid = _to_uuid(warehouse_id, "warehouse_id") if warehouse_id is not None else None
+    if wh_uuid is not None:
+        wh = db.scalar(select(Warehouse).where(Warehouse.id == wh_uuid))
+        if not wh:
+            raise WarehouseNotFoundError(f"Warehouse {wh_uuid} not found.")
+        if not wh.is_active:
+            raise InventoryError(
+                code="WAREHOUSE_INACTIVE",
+                message=f"Warehouse {wh_uuid} is inactive.",
+                status_code=400,
+            )
+
+    today = reference_date or date.today()
+    cutoff_date = today + timedelta(days=days_ahead)
+
+    avail_expr = InventoryBalance.on_hand - InventoryBalance.reserved
+
+    stmt = (
+        select(
+            ProductionBatch.batch_code,
+            ProductionBatch.variant_id,
+            ProductVariant.sku,
+            Product.name.label("product_name"),
+            Warehouse.id.label("warehouse_id"),
+            Warehouse.name.label("warehouse_name"),
+            ProductionBatch.expiry_date,
+            avail_expr.label("available_quantity"),
+        )
+        .join(ProductionBatch, InventoryBalance.batch_id == ProductionBatch.id)
+        .join(Warehouse, InventoryBalance.warehouse_id == Warehouse.id)
+        .join(ProductVariant, ProductionBatch.variant_id == ProductVariant.id)
+        .join(Product, ProductVariant.product_id == Product.id)
+        .where(
+            ProductionBatch.status == "released",
+            Warehouse.is_active.is_(True),
+            ProductionBatch.expiry_date <= cutoff_date,
+            avail_expr > Decimal("0"),
+        )
+    )
+
+    if wh_uuid is not None:
+        stmt = stmt.where(InventoryBalance.warehouse_id == wh_uuid)
+
+    stmt = stmt.order_by(
+        ProductionBatch.expiry_date.asc(),
+        ProductionBatch.batch_code.asc(),
+    )
+
+    rows = db.execute(stmt).all()
+    items: list[ExpiringBatchItem] = []
+    for row in rows:
+        days_until = (row.expiry_date - today).days
+        items.append(
+            ExpiringBatchItem(
+                batch_code=row.batch_code,
+                variant_id=row.variant_id,
+                sku=row.sku,
+                product_name=row.product_name,
+                warehouse_id=row.warehouse_id,
+                warehouse_name=row.warehouse_name,
+                expiry_date=row.expiry_date,
+                days_until_expiry=days_until,
+                available_quantity=row.available_quantity,
+            )
+        )
+    return items
+
+
+def get_low_stock_alerts(
+    db: Session,
+    warehouse_id: uuid.UUID | str | None = None,
+    threshold: Decimal | int | float = Decimal("50"),
+    reference_date: date | None = None,
+) -> list[LowStockVariantItem]:
+    """Query product variants with available stock at or below threshold across released batches.
+
+    Enforces:
+    - Aggregates available stock (SUM(on_hand - reserved)) per product variant.
+    - Only released, non-expired batches in active warehouses are counted as available (B1, B2).
+    - Returns variants with total_available <= threshold.
+    - Ordered by total_available ASC, sku ASC.
+    """
+    thresh = _to_decimal(threshold, "threshold")
+    if thresh < Decimal("0"):
+        raise InventoryError(
+            code="INVALID_THRESHOLD",
+            message="Threshold cannot be negative.",
+            status_code=400,
+        )
+
+    wh_uuid = _to_uuid(warehouse_id, "warehouse_id") if warehouse_id is not None else None
+    if wh_uuid is not None:
+        wh = db.scalar(select(Warehouse).where(Warehouse.id == wh_uuid))
+        if not wh:
+            raise WarehouseNotFoundError(f"Warehouse {wh_uuid} not found.")
+        if not wh.is_active:
+            raise InventoryError(
+                code="WAREHOUSE_INACTIVE",
+                message=f"Warehouse {wh_uuid} is inactive.",
+                status_code=400,
+            )
+
+    today = reference_date or date.today()
+
+    eligible_avail = case(
+        (
+            (ProductionBatch.status == "released") & (ProductionBatch.expiry_date >= today),
+            InventoryBalance.on_hand - InventoryBalance.reserved,
+        ),
+        else_=Decimal("0"),
+    )
+
+    avail_sum_expr = func.coalesce(
+        func.sum(eligible_avail),
+        Decimal("0"),
+    )
+
+    stmt = (
+        select(
+            ProductVariant.id.label("variant_id"),
+            ProductVariant.sku.label("sku"),
+            Product.name.label("product_name"),
+            ProductVariant.pack_size_g.label("pack_size_g"),
+            avail_sum_expr.label("total_available"),
+        )
+        .join(ProductionBatch, ProductionBatch.variant_id == ProductVariant.id)
+        .join(InventoryBalance, InventoryBalance.batch_id == ProductionBatch.id)
+        .join(Warehouse, Warehouse.id == InventoryBalance.warehouse_id)
+        .join(Product, Product.id == ProductVariant.product_id)
+        .where(
+            Warehouse.is_active.is_(True),
+        )
+    )
+
+    if wh_uuid is not None:
+        stmt = stmt.where(InventoryBalance.warehouse_id == wh_uuid)
+
+    stmt = (
+        stmt.group_by(
+            ProductVariant.id,
+            ProductVariant.sku,
+            Product.name,
+            ProductVariant.pack_size_g,
+        )
+        .having(avail_sum_expr <= thresh)
+        .order_by(avail_sum_expr.asc(), ProductVariant.sku.asc())
+    )
+
+    rows = db.execute(stmt).all()
+    items: list[LowStockVariantItem] = []
+    for row in rows:
+        avail = row.total_available
+        if avail is None:
+            avail = Decimal("0")
+        items.append(
+            LowStockVariantItem(
+                variant_id=row.variant_id,
+                sku=row.sku,
+                product_name=row.product_name,
+                pack_size=row.pack_size_g,
+                pack_size_g=row.pack_size_g,
+                total_available=avail,
+                threshold=thresh,
+                status_flag="OUT_OF_STOCK" if avail <= Decimal("0") else "LOW_STOCK",
+            )
+        )
+    return items

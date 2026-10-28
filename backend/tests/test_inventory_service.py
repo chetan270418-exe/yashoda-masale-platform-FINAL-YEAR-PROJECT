@@ -47,7 +47,7 @@ from app.inventory.service import (
     receive_stock,
     reserve_stock_fefo,
 )
-from tests.conftest import _make_user, _TestSession
+from tests.conftest import _engine, _make_user, _TestSession
 
 
 @pytest.fixture
@@ -1120,6 +1120,11 @@ def test_cancelled_order_reservation_rejected(
 
 def test_concurrency_race_condition_no_overselling(warehouse: Warehouse, variant: ProductVariant):
     """Two concurrent reservation attempts on 1 available unit must never oversell (B4)."""
+    if _engine.dialect.name != "postgresql":
+        pytest.skip(
+            "Multithreaded concurrency tests require PostgreSQL row-level locks. "
+            "Set TEST_DATABASE_URL to run."
+        )
     setup_session = _TestSession()
     today = date.today()
     batch = ProductionBatch(

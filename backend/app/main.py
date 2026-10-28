@@ -8,6 +8,7 @@ from app.catalog import router as catalog_router
 from app.core.config import get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import register_request_logging
+from app.inventory import router as inventory_router
 
 
 def create_app() -> FastAPI:
@@ -25,6 +26,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router)
     app.include_router(auth.router)
     app.include_router(catalog_router.router)
+    app.include_router(inventory_router.router)
     return app
 
 
