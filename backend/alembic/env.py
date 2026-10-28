@@ -10,6 +10,7 @@ from app.auth import models as auth_models  # noqa: F401
 from app.catalog import models as catalog_models  # noqa: F401
 from app.core.config import get_settings
 from app.core.db import Base
+from app.inventory import models as inventory_models  # noqa: F401
 
 config = context.config
 if not config.get_main_option("sqlalchemy.url"):

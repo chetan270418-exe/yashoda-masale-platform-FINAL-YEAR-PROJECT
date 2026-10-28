@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1373.417 394.14000000000004" width="1373.417" height="394.14000000000004" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="Client" data-label="Frontend / API Clients">
+  <rect x="40" y="40" width="207.32999999999998" height="291.6" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="40" width="207.32999999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">Frontend / API Clients</text>
+</g>
+<g class="subgraph" data-id="API" data-label="FastAPI Modular Monolith (/api/v1)">
+  <rect x="506.94599999999997" y="143.2266666666667" width="516.163" height="195.60000000000002" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="506.94599999999997" y="143.2266666666667" width="516.163" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="518.9459999999999" y="157.2266666666667" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">FastAPI Modular Monolith (/api/v1)</text>
+</g>
+<g class="subgraph" data-id="Database" data-label="PostgreSQL / SQLite">
+  <rect x="1083.109" y="62.53999999999999" width="250.308" height="291.6" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1083.109" y="62.53999999999999" width="250.308" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1095.109" y="76.53999999999999" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">PostgreSQL / SQLite</text>
+</g>
+<polyline class="edge" data-from="Consumer" data-to="CatalogRouter" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="sees MRP" points="234.6645,167.35000000000002 382.58799999999997,167.35000000000002 382.58799999999997,183.15000000000003 476.94599999999997,183.15000000000003 476.94599999999997,208.74666666666667 556.826,208.74666666666667" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Dealer" data-to="CatalogRouter" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="sees DEALER price (B9)" points="202.0605,232.25 488.94599999999997,232.25 488.94599999999997,219.50666666666666 556.826,219.50666666666666" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Distributor" data-to="CatalogRouter" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="sees DISTRIBUTOR price (B9)" points="260.5995,102.45 289.33,102.45000000000002 289.33,134.05 488.94599999999997,134.05 488.94599999999997,197.98666666666668 556.826,197.98666666666668" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Owner" data-to="AuthRouter" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="creates staff / updates prices" points="210.9525,291 296.4579999999999,291.00000000000006 296.4579999999999,285.2566666666667 488.94599999999997,285.2566666666667 488.94599999999997,295.9266666666667 556.826,295.9266666666667" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Owner" data-to="CatalogRouter" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="updates prices" points="210.9525,303.3 360.60999999999996,303.3 360.60999999999996,318.55666666666673 488.94599999999997,318.55666666666673 488.94599999999997,305.9266666666667 534.9459999999999,305.9266666666667 534.9459999999999,230.26666666666668 556.826,230.26666666666668" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="AuthRouter" data-to="Users" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="737.343,295.9266666666667 771.223,295.9266666666667 771.223,319.69 1099.109,319.69" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CatalogRouter" data-to="Catalog" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="766.983,214.1266666666667 786.0429999999999,214.1266666666667 786.0429999999999,124.99 1099.109,124.99" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CatalogRouter" data-to="Prices" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="766.983,214.1266666666667 786.0429999999999,214.1266666666667 786.0429999999999,189.89 1099.109,189.89" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="AuditService" data-to="Audit" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1007.1089999999999,272.99333333333334 1065.109,272.99333333333334 1065.109,254.79 1099.109,254.79000000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="AuthRouter" data-to="AuditService" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="737.343,295.9266666666667 771.223,295.9266666666667 771.223,272.99333333333334 805.103,272.99333333333334" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="CatalogRouter" data-to="AuditService" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="766.983,214.1266666666667 786.0429999999999,214.1266666666667 786.0429999999999,272.99333333333334 805.103,272.99333333333334" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="Consumer" data-to="CatalogRouter" data-label="sees MRP">
+  <rect x="390.58799999999997" y="167.15000000000003" width="66.358" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="423.76699999999994" y="182.30000000000004" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">sees MRP</text>
+</g>
+<g class="edge-label" data-from="Dealer" data-to="CatalogRouter" data-label="sees DEALER price (B9)">
+  <rect x="323.46599999999995" y="216.25" width="133.48000000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="390.20599999999996" y="231.4" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">sees DEALER price (B9)</text>
+</g>
+<g class="edge-label" data-from="Distributor" data-to="CatalogRouter" data-label="sees DISTRIBUTOR price (B9)">
+  <rect x="297.33" y="118.05000000000001" width="159.61599999999999" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="377.138" y="133.20000000000002" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">sees DISTRIBUTOR price (B9)</text>
+</g>
+<g class="edge-label" data-from="Owner" data-to="AuthRouter" data-label="creates staff / updates prices">
+  <rect x="304.4579999999999" y="269.2566666666667" width="152.48800000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="380.70199999999994" y="284.4066666666667" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">creates staff / updates prices</text>
+</g>
+<g class="edge-label" data-from="Owner" data-to="CatalogRouter" data-label="updates prices">
+  <rect x="368.60999999999996" y="302.55666666666673" width="88.33600000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="412.77799999999996" y="317.7066666666667" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">updates prices</text>
+</g>
+<g class="node" data-id="Consumer" data-label="Consumer (Public)" data-shape="rectangle">
+  <rect x="85.2695" y="148.9" width="149.395" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="159.96699999999998" y="167.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Consumer (Public)</text>
+</g>
+<g class="node" data-id="Dealer" data-label="Dealer (B2B)" data-shape="rectangle">
+  <rect x="85.2695" y="213.8" width="116.79099999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="143.665" y="232.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Dealer (B2B)</text>
+</g>
+<g class="node" data-id="Distributor" data-label="Distributor (Wholesale)" data-shape="rectangle">
+  <rect x="85.2695" y="84" width="175.32999999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="172.93449999999999" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Distributor (Wholesale)</text>
+</g>
+<g class="node" data-id="Owner" data-label="Owner (Admin)" data-shape="rectangle">
+  <rect x="85.2695" y="278.70000000000005" width="125.68299999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="148.111" y="297.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Owner (Admin)</text>
+</g>
+<g class="node" data-id="AuthRouter" data-label="/api/v1/auth
+(register, login, me, staff)" data-shape="rectangle">
+  <rect x="556.826" y="269.0266666666667" width="180.51699999999994" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="647.0844999999999" y="295.9266666666667" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="647.0844999999999" dy="-3.9000000000000012">/api/v1/auth</tspan><tspan x="647.0844999999999" dy="16.900000000000002">(register, login, me, staff)</tspan></text>
+</g>
+<g class="node" data-id="CatalogRouter" data-label="/api/v1/products, /categories
+(Role-Based Price Resolver)" data-shape="rectangle">
+  <rect x="556.826" y="187.2266666666667" width="210.15699999999998" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="661.9045" y="214.1266666666667" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="661.9045" dy="-3.9000000000000012">/api/v1/products, /categories</tspan><tspan x="661.9045" dy="16.900000000000002">(Role-Based Price Resolver)</tspan></text>
+</g>
+<g class="node" data-id="AuditService" data-label="Audit Log Service
+(Sensitive change tracking)" data-shape="rectangle">
+  <rect x="805.103" y="246.09333333333336" width="202.00599999999997" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="906.106" y="272.99333333333334" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="906.106" dy="-3.9000000000000012">Audit Log Service</tspan><tspan x="906.106" dy="16.900000000000002">(Sensitive change tracking)</tspan></text>
+</g>
+<g class="node" data-id="Users" data-label="users, roles" data-shape="rectangle">
+  <rect x="1099.109" y="301.24" width="113.827" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1156.0225" y="319.69" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">users, roles</text>
+</g>
+<g class="node" data-id="Catalog" data-label="products, variants, categories" data-shape="rectangle">
+  <rect x="1099.109" y="106.53999999999999" width="218.308" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1208.263" y="124.99" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">products, variants, categories</text>
+</g>
+<g class="node" data-id="Prices" data-label="price_lists, price_list_items" data-shape="rectangle">
+  <rect x="1099.109" y="171.44" width="201.265" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1199.7414999999999" y="189.89" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">price_lists, price_list_items</text>
+</g>
+<g class="node" data-id="Audit" data-label="audit_logs" data-shape="rectangle">
+  <rect x="1099.109" y="236.34" width="102.71199999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1150.465" y="254.79000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">audit_logs</text>
+</g>
+</svg>

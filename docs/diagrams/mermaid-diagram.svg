@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 796.4749999999999 1104.252" width="796.4749999999999" height="1104.252" style="--bg:#1F1F1F;--fg:#CCCCCC;--line:#CCCCCC;--accent:#0078D4;--muted:#CCCCCCCC;--surface:#181818;--border:#CCCCCC;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="Req" data-to="RL" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="241.37124999999995,76.9 241.37124999999997,124.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="RL" data-to="E429" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Exceeded" points="209.8785833333333,282.36333333333334 209.8785833333333,456.135 151.37699999999995,456.135 151.37699999999995,536.4350000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="RL" data-to="Auth" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="OK" points="272.8639166666666,282.36333333333334 272.8639166666666,325.856 386.34349999999995,325.856 386.34349999999995,406.1560000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Auth" data-to="E401" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Invalid / Missing" points="338.5487499999999,549.54025 338.5487499999999,609.335 148.8555,609.335 148.8555,689.635" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Auth" data-to="E403D" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Deactivated" points="386.34349999999995,597.335 386.34349999999995,776.9520000000001 358.8545,776.9520000000001 358.8544999999999,857.2520000000001" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Auth" data-to="Guard" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Valid User" points="434.13824999999997,549.54025 434.13824999999997,609.335 589.7454999999999,609.335 589.7454999999999,689.635" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Guard" data-to="E403" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Forbidden Role" points="555.6593333333333,860.0658333333334 555.6593333333333,930.152 501.41849999999994,930.152 501.4184999999999,1010.452" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Guard" data-to="Service" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Authorized" points="623.8316666666666,860.0658333333333 623.8316666666666,930.152 678.0725,930.152 678.0724999999999,1010.452" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="RL" data-to="E429" data-label="Exceeded">
+  <rect x="117.87699999999995" y="463.135" width="66.358" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="151.05599999999995" y="478.28499999999997" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Exceeded</text>
+</g>
+<g class="edge-label" data-from="RL" data-to="Auth" data-label="OK">
+  <rect x="370.34349999999995" y="332.856" width="31.906" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="386.2964999999999" y="348.006" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">OK</text>
+</g>
+<g class="edge-label" data-from="Auth" data-to="E401" data-label="Invalid / Missing">
+  <rect x="102.3555" y="616.335" width="92.49400000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="148.60250000000002" y="631.485" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Invalid / Missing</text>
+</g>
+<g class="edge-label" data-from="Auth" data-to="E403D" data-label="Deactivated">
+  <rect x="321.8545" y="783.9520000000001" width="73.48600000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="358.59749999999997" y="799.1020000000001" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Deactivated</text>
+</g>
+<g class="edge-label" data-from="Auth" data-to="Guard" data-label="Valid User">
+  <rect x="556.2454999999999" y="616.335" width="66.952" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="589.7214999999999" y="631.485" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Valid User</text>
+</g>
+<g class="edge-label" data-from="Guard" data-to="E403" data-label="Forbidden Role">
+  <rect x="455.91849999999994" y="937.152" width="90.71200000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="501.27449999999993" y="952.302" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Forbidden Role</text>
+</g>
+<g class="edge-label" data-from="Guard" data-to="Service" data-label="Authorized">
+  <rect x="643.0725" y="937.152" width="69.92200000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="678.0335" y="952.302" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Authorized</text>
+</g>
+<g class="node" data-id="Req" data-label="Incoming Request" data-shape="rectangle">
+  <rect x="168.89674999999994" y="40" width="144.949" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="241.37124999999995" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Incoming Request</text>
+</g>
+<g class="node" data-id="RL" data-label="Rate Limiter
+(Max 5 attempts / 60s)" data-shape="diamond">
+  <polygon points="241.37124999999997,124.9 335.84925,219.37800000000001 241.37124999999997,313.856 146.89324999999997,219.37800000000001" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="241.37124999999997" y="219.37800000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="241.37124999999997" dy="-3.9000000000000012">Rate Limiter</tspan><tspan x="241.37124999999997" dy="16.900000000000002">(Max 5 attempts / 60s)</tspan></text>
+</g>
+<g class="node" data-id="E429" data-label="429 RATE_LIMIT_EXCEEDED" data-shape="rectangle">
+  <rect x="40" y="536.4350000000001" width="222.75399999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="151.37699999999995" y="554.8850000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">429 RATE_LIMIT_EXCEEDED</text>
+</g>
+<g class="node" data-id="Auth" data-label="Authentication
+(JWT HS256 / bcrypt)" data-shape="diamond">
+  <polygon points="386.3434999999999,406.15600000000006 481.9329999999999,501.74550000000005 386.3434999999999,597.335 290.7539999999999,501.74550000000005" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="386.3434999999999" y="501.74550000000005" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="386.3434999999999" dy="-3.9000000000000012">Authentication</tspan><tspan x="386.3434999999999" dy="16.900000000000002">(JWT HS256 / bcrypt)</tspan></text>
+</g>
+<g class="node" data-id="E401" data-label="401 UNAUTHORIZED" data-shape="rectangle">
+  <rect x="67.48900000000003" y="689.635" width="162.73299999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="148.8555" y="708.085" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">401 UNAUTHORIZED</text>
+</g>
+<g class="node" data-id="E403D" data-label="403 ACCOUNT_DISABLED" data-shape="rectangle">
+  <rect x="258.222" y="857.2520000000001" width="201.2649999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="358.8544999999999" y="875.7020000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">403 ACCOUNT_DISABLED</text>
+</g>
+<g class="node" data-id="Guard" data-label="require_roles(...) Guard
+(Role &amp; Alias Check)" data-shape="diamond">
+  <polygon points="589.7454999999999,689.635 692.0039999999999,791.8935 589.7454999999999,894.152 487.48699999999985,791.8935" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="589.7454999999999" y="791.8935" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="589.7454999999999" dy="-3.9000000000000012">require_roles(...) Guard</tspan><tspan x="589.7454999999999" dy="16.900000000000002">(Role &amp; Alias Check)</tspan></text>
+</g>
+<g class="node" data-id="E403" data-label="403 FORBIDDEN" data-shape="rectangle">
+  <rect x="431.1669999999999" y="1010.452" width="140.503" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="501.4184999999999" y="1028.902" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">403 FORBIDDEN</text>
+</g>
+<g class="node" data-id="Service" data-label="Business Endpoint
++ Append Audit Row" data-shape="rectangle">
+  <rect x="599.6699999999998" y="1010.452" width="156.805" height="53.800000000000004" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="678.0724999999999" y="1037.352" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)"><tspan x="678.0724999999999" dy="-3.9000000000000012">Business Endpoint</tspan><tspan x="678.0724999999999" dy="16.900000000000002">+ Append Audit Row</tspan></text>
+</g>
+</svg>
