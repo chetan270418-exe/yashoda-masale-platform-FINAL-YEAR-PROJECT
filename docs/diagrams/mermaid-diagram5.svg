@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1796.5009166666664 601.4" width="1796.5009166666664" height="601.4" style="--bg:#18181B;--fg:#F4F4F5;--line:#71717A;--muted:#A1A1AA;--surface:#27272A;--border:#3F3F46;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="M8_Conversational_AI__Agentic_Layer" data-label="M8: Conversational AI &amp; Agentic Layer">
+  <rect x="40" y="40" width="962.2227499999999" height="521.4" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="40" width="962.2227499999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">M8: Conversational AI &amp; Agentic Layer</text>
+</g>
+<g class="subgraph" data-id="M7_Forecasting__Reorder_Intelligence" data-label="M7: Forecasting &amp; Reorder Intelligence">
+  <rect x="1030.22275" y="40" width="726.2781666666665" height="351.6" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="1030.22275" y="40" width="726.2781666666665" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="1042.22275" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">M7: Forecasting &amp; Reorder Intelligence</text>
+</g>
+<polyline class="edge" data-from="User" data-to="Router" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="437.1260833333333,120.9 437.1260833333333,168.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Router" data-to="Auth" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="437.1260833333333,205.8 437.1260833333333,253.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Auth" data-to="RAG" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="437.1260833333333,290.70000000000005 437.1260833333333,314.70000000000005 286.4555,314.70000000000005 286.4555,338.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Auth" data-to="Tools" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="437.1260833333333,290.70000000000005 437.1260833333333,314.70000000000005 674.072,314.70000000000005 674.072,338.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="RAG" data-to="Citations" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="245.13083333333333,375.6 245.13083333333333,387.6 158.8555,387.6 158.8555,423.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="RAG" data-to="Fallback" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="327.7801666666667,375.6 327.7801666666667,387.6 414.0555,387.6 414.0555,423.6" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Tools" data-to="ToolAuth" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="674.072,375.6 674.072,423.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ToolAuth" data-to="ToolRunLog" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="674.072,460.5 674.072,484.5 524.05675,484.5 524.05675,508.5" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ToolAuth" data-to="Draft" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="674.072,460.5 674.072,484.5 824.0872499999999,484.5 824.0872499999999,508.5" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Data" data-to="Split" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1369.118,120.9 1369.118,168.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Split" data-to="Baseline" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1369.1179999999997,205.8 1369.1179999999997,229.8 1185.3872499999998,229.8 1185.3872499999998,253.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Split" data-to="Model" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1369.1179999999997,205.8 1369.1179999999997,229.8 1552.8487499999999,229.8 1552.8487499999999,253.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Baseline" data-to="Eval" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1185.3872499999998,290.70000000000005 1185.3872499999998,338.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Model" data-to="Eval" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1552.8487499999999,290.70000000000005 1552.8487499999999,314.70000000000005 1236.8389166666666,314.70000000000005 1236.8389166666666,338.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Model" data-to="Reorder" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1552.8487499999999,290.70000000000005 1552.8487499999999,314.70000000000005 1579.8474166666665,314.70000000000005 1579.8474166666665,338.70000000000005" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="node" data-id="User" data-label="User (Consumer / Dealer / Owner)" data-shape="rectangle">
+  <rect x="318.7095833333333" y="84" width="236.833" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="437.12608333333327" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">User (Consumer / Dealer / Owner)</text>
+</g>
+<g class="node" data-id="Router" data-label="/api/v1/ai/chat &amp; /agent" data-shape="rectangle">
+  <rect x="352.7955833333333" y="168.9" width="168.661" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="437.1260833333333" y="187.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">/api/v1/ai/chat &amp; /agent</text>
+</g>
+<g class="node" data-id="Auth" data-label="Authentication &amp; RBAC Context" data-shape="rectangle">
+  <rect x="327.60158333333334" y="253.8" width="219.04899999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="437.1260833333333" y="272.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Authentication &amp; RBAC Context</text>
+</g>
+<g class="node" data-id="RAG" data-label="RAG Assistant (Approved KB Docs)" data-shape="rectangle">
+  <rect x="162.48149999999998" y="338.70000000000005" width="247.94799999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="286.4555" y="357.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">RAG Assistant (Approved KB Docs)</text>
+</g>
+<g class="node" data-id="Tools" data-label="Whitelisted Tools Engine" data-shape="rectangle">
+  <rect x="581.5905" y="338.70000000000005" width="184.96299999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="674.072" y="357.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Whitelisted Tools Engine</text>
+</g>
+<g class="node" data-id="Citations" data-label="Strict Sources Citation (B63)" data-shape="rectangle">
+  <rect x="56" y="423.6" width="205.71099999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="158.8555" y="442.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Strict Sources Citation (B63)</text>
+</g>
+<g class="node" data-id="Fallback" data-label="'Approved information not available'" data-shape="rectangle">
+  <rect x="289.711" y="423.6" width="248.68899999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="414.0555" y="442.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">&#39;Approved information not available&#39;</text>
+</g>
+<g class="node" data-id="ToolAuth" data-label="Role Guard (Owner vs Dealer)" data-shape="rectangle">
+  <rect x="566.4" y="423.6" width="215.34399999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="674.072" y="442.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Role Guard (Owner vs Dealer)</text>
+</g>
+<g class="node" data-id="ToolRunLog" data-label="Audit Log to ai_tool_runs (B65)" data-shape="rectangle">
+  <rect x="414.16175000000004" y="508.5" width="219.78999999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="524.05675" y="526.95" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Audit Log to ai_tool_runs (B65)</text>
+</g>
+<g class="node" data-id="Draft" data-label="create_order_draft() -&gt; Human In The Loop (B62)" data-shape="rectangle">
+  <rect x="661.95175" y="508.5" width="324.27099999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="824.0872499999999" y="526.95" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">create_order_draft() -&gt; Human In The Loop (B62)</text>
+</g>
+<g class="node" data-id="Data" data-label="24-Month Synthetic Demand Data" data-shape="rectangle">
+  <rect x="1252.9244999999999" y="84" width="232.38699999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1369.118" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">24-Month Synthetic Demand Data</text>
+</g>
+<g class="node" data-id="Split" data-label="Chronological Train/Test Split (B66)" data-shape="rectangle">
+  <rect x="1243.6619999999998" y="168.9" width="250.91199999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1369.1179999999997" y="187.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Chronological Train/Test Split (B66)</text>
+</g>
+<g class="node" data-id="Baseline" data-label="Baselines (Seasonal Naive, Moving Avg)" data-shape="rectangle">
+  <rect x="1046.22275" y="253.8" width="278.32899999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1185.3872499999998" y="272.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Baselines (Seasonal Naive, Moving Avg)</text>
+</g>
+<g class="node" data-id="Model" data-label="Candidate ML Model" data-shape="rectangle">
+  <rect x="1471.8527499999998" y="253.8" width="161.992" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1552.8487499999999" y="272.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Candidate ML Model</text>
+</g>
+<g class="node" data-id="Eval" data-label="Metrics (MAE, RMSE) -&gt; forecast_evaluations" data-shape="rectangle">
+  <rect x="1082.4839166666666" y="338.70000000000005" width="308.7099999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1236.8389166666666" y="357.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Metrics (MAE, RMSE) -&gt; forecast_evaluations</text>
+</g>
+<g class="node" data-id="Reorder" data-label="Reorder Points &amp; Expiry Risk Recommendations" data-shape="rectangle">
+  <rect x="1419.1939166666666" y="338.70000000000005" width="321.3069999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1579.8474166666665" y="357.15000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Reorder Points &amp; Expiry Risk Recommendations</text>
+</g>
+</svg>

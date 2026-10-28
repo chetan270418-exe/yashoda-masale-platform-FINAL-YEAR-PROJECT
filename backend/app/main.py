@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.ai import router as ai_router
 from app.api.v1 import auth, health
 from app.catalog import router as catalog_router
 from app.core.config import get_settings
@@ -27,6 +28,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router)
     app.include_router(catalog_router.router)
     app.include_router(inventory_router.router)
+    app.include_router(ai_router.router)
     return app
 
 

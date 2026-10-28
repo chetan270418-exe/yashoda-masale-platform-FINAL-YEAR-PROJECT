@@ -60,20 +60,20 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** scanning a QR shows the correct recorded events.
 
 ## M7 — Forecasting and reorder (Weeks 17–19)
-- [ ] T-070 (M3) Synthetic data generator (reproducible, labelled).
-- [ ] T-071 (M3) Baseline and candidate models, chronological split, metrics saved.
-- [ ] T-072 (M3) Reorder recommendations with visible inputs. Expiry-risk rules.
+- [x] T-070 (M3) Synthetic data generator (reproducible, labelled).
+- [x] T-071 (M3) Baseline and candidate models, chronological split, metrics saved.
+- [x] T-072 (M3) Reorder recommendations with visible inputs. Expiry-risk rules.
 - [ ] T-073 (M1) Forecast, evaluation and recommendations screens.
-- [ ] T-074 (M4) Tests for reorder maths and metrics code.
+- [x] T-074 (M4) Tests for reorder maths and metrics code.
 **Done when:** evaluation report generated with baseline vs model.
 
 ## M8 — AI assistant and agent (Weeks 20–21)
-- [ ] T-080 (M3) LLM adapter, approved knowledge base ingestion, retrieval.
-- [ ] T-081 (M3) RAG answers with sources and "no source" fallback.
-- [ ] T-082 (M3) Tool whitelist, natural-language analytics, tool run logging.
-- [ ] T-083 (M3/M2) Dealer reorder draft and approve endpoints.
+- [x] T-080 (M3) LLM adapter, approved knowledge base ingestion, retrieval.
+- [x] T-081 (M3) RAG answers with sources and "no source" fallback.
+- [x] T-082 (M3) Tool whitelist, natural-language analytics, tool run logging.
+- [x] T-083 (M3/M2) Dealer reorder draft and approve endpoints.
 - [ ] T-084 (M1) Chat UI, draft review screen, NL query screen.
-- [ ] T-085 (M4) Tests: no-source refusal, permission-aware tools, draft not submitted without approval, prompt-injection attempts.
+- [x] T-085 (M4) Tests: no-source refusal, permission-aware tools, draft not submitted without approval, prompt-injection attempts.
 **Done when:** the demo AI scenarios work and the refusal tests pass.
 
 ## M9 — Deployment (Week 22)

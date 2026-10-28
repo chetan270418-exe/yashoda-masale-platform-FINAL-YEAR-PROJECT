@@ -6,9 +6,9 @@ Read this at the start of every session. Update it at the end. Keep it short and
 **Yashoda SpiceChain AI** is a web-first platform for the spice business Yashoda Masale. It records raw-material receipt, production batches, quality release, warehouse stock with FEFO, dealer/distributor and consumer orders, and QR batch traceability. A business AI layer adds forecasting, reorder and expiry-risk suggestions, a RAG assistant, a dealer reorder agent and natural-language analytics. It is a Diploma (Computer Engineering) final-year project with a 4-member team and a 24-week plan.
 
 ## 2. Status
-- Current milestone: M4 (Inventory — T-040, T-041, T-042, T-043, T-045 completed & reviewed)
-- Last session summary: Review hardening for T-042 and T-045: fixed local SQLite test runner (safely skipped concurrency test on SQLite), enforced Invariant B2 in low-stock alert query (excluded expired batches from available stock), fixed OUT_OF_STOCK reporting for held batches, added 3 new alert edge-case tests. 136 tests passing on live PostgreSQL, 131 passed / 2 skipped on SQLite.
-- Next task: T-044 (Warehouse frontend screens) or M5 Ordering (T-050).
+- Current milestone: M7 & M8 (AI Subsystem Backend — T-070, T-071, T-072, T-074, T-080, T-081, T-082, T-083, T-085 completed & verified)
+- Last session summary: Implemented AI subsystem in backend/app/ai/ spanning M7 (Sales Demand Forecasting & Reorder Intelligence) and M8 (LLM Adapter, Grounded RAG Assistant, Safe Whitelisted Tools & Dealer Reorder Agent). Built Alembic migration 0004_ai_subsystem (tables: ai_tool_runs, sales_forecasts, forecast_evaluations, order_drafts). Implemented deterministic synthetic demand generator, 3 forecasting models (seasonal naive, moving average, linear trend seasonal) with MAE/RMSE/MAPE evaluation, reorder math with batch expiry risk, RAG BM25 retriever with source citations & refusal fallback, 5 safe whitelisted tools with audit logging in ai_tool_runs, draft-order approval flow, and 6 API endpoints. All 22 new AI tests passing; 158/158 tests passing on live PostgreSQL 18.
+- Next task: Frontend UI for Warehouse (T-044), Store/Ordering (M5), or AI Dashboards/Chat (T-073/T-084).
 
 ## 3. Decisions log
 | ID | Decision | Reason |
@@ -32,6 +32,10 @@ Read this at the start of every session. Update it at the end. Keep it short and
 | D-017 | 6 canonical roles: owner, factory, warehouse, distributor, dealer, consumer | Spec says 6; alias code removed for simplicity |
 | D-018 | X-Forwarded-For trusted only when TRUST_PROXY_HEADERS=true | Prevents rate-limiter bypass via spoofed headers |
 | D-019 | JWT_SECRET must be non-default in non-local environments | App refuses to start if secret is empty or dev default outside local |
+| D-020 | AI never generates SQL; agent invokes whitelisted, permission-bound tools only | Security and safety (Rules 60, 61) |
+| D-021 | AI mutations generate reviewable drafts requiring explicit human confirmation | Human in the loop (Rule 62) |
+| D-022 | RAG strictly cites approved knowledge files or returns exact refusal string | Groundedness and truthfulness (Rule 63) |
+| D-023 | Forecast backtesting evaluates candidate against baselines on chronological split | Honest metrics (Rule 66, D-015) |
 
 ## 4. Glossary
 - **Batch:** one production run with a unique code, dates and quality status.
@@ -60,6 +64,7 @@ Owner, Factory, Warehouse, Distributor, Dealer, Consumer (6 canonical, no aliase
 
 ## 8. Session log (newest first)
 ```
+2026-10-28 | M7 & M8 (T-070-074, T-080-085) | Implemented Yashoda SpiceChain AI subsystem: Alembic migration 0004_ai_subsystem (ai_tool_runs, sales_forecasts, forecast_evaluations, order_drafts), models, MockLLMAdapter & LiveHTTPLLMAdapter, RAG BM25 retriever & service with mandatory source citations and exact refusal fallback, 5 safe whitelisted tools (check_stock, get_sales_summary, get_slow_movers, get_dealer_history, create_order_draft) with user-permission binding and audit logging, 24-month synthetic demand generator, 3 forecasting models (seasonal naive, moving average 3m, linear trend seasonal) with MAE/RMSE/MAPE backtesting, reorder math with batch expiry risk, draft-order human approval workflow, 6 API endpoints (/api/v1/ai/*); ruff/black formatted; 22 new tests passing | backend/app/ai/*, backend/alembic/versions/0004_ai_subsystem.py, backend/tests/test_ai_*.py | 158 passed on live PostgreSQL 18 | Next: Frontend UI (T-044, M5, or T-073/T-084)
 2026-10-28 | T-042, T-045 Review | Review hardening: fixed broken SQLite test runner by skipping multithreaded test on SQLite; fixed Invariant B2 violation in low-stock alert query by excluding expired batches from available stock via conditional case aggregation; fixed missing OUT_OF_STOCK reporting for variants with held batches; added 3 new edge case tests (expired batch exclusion, held batch isolation, negative days until expiry) | backend/app/inventory/service.py, backend/tests/test_inventory_service.py, backend/tests/test_inventory_alerts.py, spec-pack/memory.md | 136 passed (PostgreSQL), 131 passed / 2 skipped (SQLite) | Next: T-044 / T-050
 2026-10-28 | T-042, T-045 | Expiry & low-stock alert query endpoints (/alerts/expiry, /alerts/low-stock) with lookahead, threshold, warehouse filtering, and RBAC; manual adjustments endpoint (/adjustments) with reason validation and audit log; multithreaded PostgreSQL concurrency test suite for B4 single-unit race, multi-batch parallel allocation, atomic CAS cancel vs dispatch, and held-batch isolation; jsonable_encoder fix in validation_error handler | backend/app/inventory/*, backend/app/main.py, backend/app/core/errors.py, backend/tests/test_inventory_alerts.py, backend/tests/test_concurrency.py | 133 passed (live PostgreSQL) | Next: T-044 / T-050
 2026-10-28 | T-041, T-043 Review | Review hardening: concurrency race-condition protection (SQL expression reserved update + IntegrityError/StaleDataError catch), variant mismatch check, negative min_shelf_days check, inactive warehouse and cancelled order checks, exception hierarchy cleanup, idempotent receive_stock on reference_id, 6 new test scenarios | backend/app/inventory/service.py, backend/tests/test_inventory_service.py, spec-pack/memory.md | 114 passed | Next: T-042 / T-045
