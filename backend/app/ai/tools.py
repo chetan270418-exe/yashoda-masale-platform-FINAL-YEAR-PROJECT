@@ -8,6 +8,7 @@ Enforces:
 """
 
 import uuid
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -17,10 +18,13 @@ from sqlalchemy.orm import Session
 
 from app.ai.models import AIToolRun, OrderDraft
 from app.auth.models import User
-from app.catalog.models import Product, ProductVariant
+from app.catalog import repository as catalog_repo
+from app.catalog.models import Category, Product, ProductVariant
+from app.catalog.service import resolve_price_list_name_for_role
 from app.core.errors import AppError
 from app.inventory.models import (
     InventoryBalance,
+    Order,
     OrderItem,
     ProductionBatch,
     Warehouse,
@@ -55,7 +59,7 @@ class SalesSummaryArgs(BaseModel):
 
 
 class SlowMoversArgs(BaseModel):
-    threshold_days: int = Field(default=45, ge=1, le=365)
+    threshold_days: int = Field(default=30, ge=1, le=365)
 
 
 class DealerHistoryArgs(BaseModel):
@@ -123,26 +127,93 @@ def tool_get_sales_summary(db: Session, user: User, args: dict[str, Any]) -> dic
         raise ToolPermissionError("Only owners may access aggregate sales summaries.")
 
     validated = SalesSummaryArgs(**args)
-    # Aggregate order items metrics
-    query = (
-        select(
-            ProductVariant.sku,
-            Product.name.label("product_name"),
-            func.sum(OrderItem.quantity).label("total_sold_quantity"),
+    cutoff = None
+    if validated.period == "last_7_days":
+        cutoff = datetime.now(UTC) - timedelta(days=7)
+    elif validated.period == "last_30_days":
+        cutoff = datetime.now(UTC) - timedelta(days=30)
+    elif validated.period == "last_90_days":
+        cutoff = datetime.now(UTC) - timedelta(days=90)
+
+    if validated.group_by == "product":
+        query = (
+            select(
+                Product.name.label("product_name"),
+                func.coalesce(func.sum(OrderItem.quantity), Decimal("0")).label(
+                    "total_sold_quantity"
+                ),
+            )
+            .join(ProductVariant, ProductVariant.product_id == Product.id)
+            .join(OrderItem, OrderItem.variant_id == ProductVariant.id)
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(Order.status != "cancelled")
+            .group_by(Product.name)
+            .order_by(Product.name.asc())
         )
-        .join(Product, Product.id == ProductVariant.product_id)
-        .join(OrderItem, OrderItem.variant_id == ProductVariant.id)
-        .group_by(ProductVariant.sku, Product.name)
-    )
-    rows = db.execute(query).all()
-    items = [
-        {
-            "sku": r.sku,
-            "product_name": r.product_name,
-            "total_sold_quantity": float(r.total_sold_quantity or 0),
-        }
-        for r in rows
-    ]
+        if cutoff is not None:
+            query = query.where(Order.created_at >= cutoff)
+        rows = db.execute(query).all()
+        items = [
+            {
+                "product_name": r.product_name,
+                "total_sold_quantity": str(r.total_sold_quantity),
+            }
+            for r in rows
+        ]
+    elif validated.group_by == "category":
+        query = (
+            select(
+                Category.name.label("category_name"),
+                func.coalesce(func.sum(OrderItem.quantity), Decimal("0")).label(
+                    "total_sold_quantity"
+                ),
+            )
+            .join(Product, Product.category_id == Category.id)
+            .join(ProductVariant, ProductVariant.product_id == Product.id)
+            .join(OrderItem, OrderItem.variant_id == ProductVariant.id)
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(Order.status != "cancelled")
+            .group_by(Category.name)
+            .order_by(Category.name.asc())
+        )
+        if cutoff is not None:
+            query = query.where(Order.created_at >= cutoff)
+        rows = db.execute(query).all()
+        items = [
+            {
+                "category_name": r.category_name,
+                "total_sold_quantity": str(r.total_sold_quantity),
+            }
+            for r in rows
+        ]
+    else:  # default "variant"
+        query = (
+            select(
+                ProductVariant.sku,
+                Product.name.label("product_name"),
+                func.coalesce(func.sum(OrderItem.quantity), Decimal("0")).label(
+                    "total_sold_quantity"
+                ),
+            )
+            .join(Product, Product.id == ProductVariant.product_id)
+            .join(OrderItem, OrderItem.variant_id == ProductVariant.id)
+            .join(Order, Order.id == OrderItem.order_id)
+            .where(Order.status != "cancelled")
+            .group_by(ProductVariant.sku, Product.name)
+            .order_by(ProductVariant.sku.asc())
+        )
+        if cutoff is not None:
+            query = query.where(Order.created_at >= cutoff)
+        rows = db.execute(query).all()
+        items = [
+            {
+                "sku": r.sku,
+                "product_name": r.product_name,
+                "total_sold_quantity": str(r.total_sold_quantity),
+            }
+            for r in rows
+        ]
+
     return {"period": validated.period, "group_by": validated.group_by, "sales": items}
 
 
@@ -153,7 +224,15 @@ def tool_get_slow_movers(db: Session, user: User, args: dict[str, Any]) -> dict[
         raise ToolPermissionError("Only owners may query slow-moving inventory analytics.")
 
     validated = SlowMoversArgs(**args)
-    # Find batches with high available stock and older manufacture dates
+    cutoff = datetime.now(UTC) - timedelta(days=validated.threshold_days)
+
+    active_variants_subquery = (
+        select(OrderItem.variant_id)
+        .join(Order, Order.id == OrderItem.order_id)
+        .where(Order.status != "cancelled", Order.created_at >= cutoff)
+        .scalar_subquery()
+    )
+
     query = (
         select(
             ProductionBatch.batch_code,
@@ -170,10 +249,11 @@ def tool_get_slow_movers(db: Session, user: User, args: dict[str, Any]) -> dict[
         .join(Warehouse, Warehouse.id == InventoryBalance.warehouse_id)
         .where(
             ProductionBatch.status == "released",
+            ProductionBatch.variant_id.not_in(active_variants_subquery),
             (InventoryBalance.on_hand - InventoryBalance.reserved) > Decimal("0"),
         )
-        .order_by(ProductionBatch.created_at.asc())
-        .limit(10)
+        .order_by(ProductionBatch.expiry_date.asc(), ProductionBatch.batch_code.asc())
+        .limit(50)
     )
     rows = db.execute(query).all()
     slow_items = [
@@ -181,7 +261,7 @@ def tool_get_slow_movers(db: Session, user: User, args: dict[str, Any]) -> dict[
             "batch_code": r.batch_code,
             "sku": r.sku,
             "product_name": r.product_name,
-            "available": float(r.on_hand - r.reserved),
+            "available": str(r.on_hand - r.reserved),
             "expiry_date": str(r.expiry_date),
             "warehouse": r.warehouse_name,
         }
@@ -211,7 +291,7 @@ def tool_get_dealer_history(db: Session, user: User, args: dict[str, Any]) -> di
         {
             "draft_id": str(d.id),
             "status": d.status,
-            "total_estimated": float(d.total_estimated),
+            "total_estimated": f"{d.total_estimated:.2f}",
             "items": d.items,
             "created_at": str(d.created_at),
         }
@@ -223,38 +303,55 @@ def tool_get_dealer_history(db: Session, user: User, args: dict[str, Any]) -> di
 def tool_create_order_draft(db: Session, user: User, args: dict[str, Any]) -> dict[str, Any]:
     """Create a DRAFT order requiring human confirmation (Rule 62)."""
     validated = CreateOrderDraftArgs(**args)
-    items_data = []
+    if not validated.items:
+        raise ToolArgumentError("Order draft items cannot be empty.")
+
+    # Merge duplicate items for identical variant_id by summing quantities
+    merged_quantities: dict[uuid.UUID, Decimal] = {}
+    for item in validated.items:
+        merged_quantities[item.variant_id] = (
+            merged_quantities.get(item.variant_id, Decimal("0")) + item.quantity
+        )
+
+    # Resolve price list name based on user's role (Rule B9)
+    role_name = user.role.name if user.role else None
+    price_list_name = resolve_price_list_name_for_role(role_name)
+    price_list = catalog_repo.get_price_list_by_name(db, price_list_name)
+    if not price_list:
+        raise ToolArgumentError(f"Price list '{price_list_name}' not found.")
+
+    items_data: list[dict[str, Any]] = []
     total = Decimal("0.00")
 
-    # If items are empty, suggest regular baseline items
-    if not validated.items:
-        variants = db.scalars(select(ProductVariant).limit(2)).all()
-        for v in variants:
-            qty = Decimal("25.000")
-            price = Decimal("120.00")  # placeholder
-            items_data.append(
-                {
-                    "variant_id": str(v.id),
-                    "sku": v.sku,
-                    "quantity": float(qty),
-                    "unit_price": float(price),
-                }
+    for variant_id, qty in merged_quantities.items():
+        variant = db.scalar(
+            select(ProductVariant)
+            .join(Product, Product.id == ProductVariant.product_id)
+            .where(ProductVariant.id == variant_id)
+        )
+        if not variant:
+            raise ToolArgumentError(f"Variant '{variant_id}' not found.")
+
+        if not variant.is_active or not variant.product.is_active:
+            raise ToolArgumentError(f"Variant '{variant.sku}' is inactive.")
+
+        unit_price = catalog_repo.get_latest_price_for_variant(db, price_list.id, variant.id)
+        if unit_price is None:
+            raise ToolArgumentError(
+                f"Variant '{variant.sku}' has no active price in price list '{price_list_name}'."
             )
-            total += qty * price
-    else:
-        for it in validated.items:
-            variant = db.scalar(select(ProductVariant).where(ProductVariant.id == it.variant_id))
-            sku = variant.sku if variant else "UNKNOWN"
-            price = Decimal("100.00")
-            items_data.append(
-                {
-                    "variant_id": str(it.variant_id),
-                    "sku": sku,
-                    "quantity": float(it.quantity),
-                    "unit_price": float(price),
-                }
-            )
-            total += it.quantity * price
+
+        line_total = qty * unit_price
+        total += line_total
+        items_data.append(
+            {
+                "variant_id": str(variant.id),
+                "sku": variant.sku,
+                "quantity": str(qty),
+                "unit_price": f"{unit_price:.2f}",
+                "line_total": f"{line_total:.2f}",
+            }
+        )
 
     draft = OrderDraft(
         customer_id=user.id,
@@ -271,7 +368,7 @@ def tool_create_order_draft(db: Session, user: User, args: dict[str, Any]) -> di
         "draft_id": str(draft.id),
         "status": "draft",
         "requires_human_approval": True,
-        "total_estimated": float(draft.total_estimated),
+        "total_estimated": f"{draft.total_estimated:.2f}",
         "items": items_data,
         "message": "Draft created. Please review and confirm to submit your order.",
     }

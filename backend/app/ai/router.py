@@ -30,12 +30,17 @@ from app.auth.models import User
 from app.catalog.models import Product, ProductVariant
 from app.core.db import get_db
 from app.core.errors import AppError
+from app.core.rate_limit import RateLimiter
 from app.inventory.models import InventoryBalance, Order, OrderItem, ProductionBatch
 
 router = APIRouter(prefix="/api/v1/ai", tags=["ai"])
 
+# Rate limiters (20 req/60s for chat, 30 req/60s for agent query)
+ai_chat_rate_limiter = RateLimiter(max_requests=20, window_seconds=60, name="ai_chat")
+ai_agent_rate_limiter = RateLimiter(max_requests=30, window_seconds=60, name="ai_agent")
 
-@router.post("/chat", response_model=ChatResponse)
+
+@router.post("/chat", response_model=ChatResponse, dependencies=[Depends(ai_chat_rate_limiter)])
 def chat_with_rag(
     request: ChatRequest,
 ) -> ChatResponse:
@@ -44,7 +49,11 @@ def chat_with_rag(
     return ChatResponse(answer=result["answer"], sources=result["sources"])
 
 
-@router.post("/agent/query", response_model=AgentQueryResponse)
+@router.post(
+    "/agent/query",
+    response_model=AgentQueryResponse,
+    dependencies=[Depends(ai_agent_rate_limiter)],
+)
 def execute_agent_query(
     request: AgentQueryRequest,
     current_user: Annotated[User, Depends(get_current_user)],
@@ -89,7 +98,7 @@ def approve_order_draft(
     db: Annotated[Session, Depends(get_db)],
 ) -> DraftApprovalResponse:
     """Human-in-the-loop: dealer or consumer approves AI order draft (Rule 62)."""
-    draft = db.scalar(select(OrderDraft).where(OrderDraft.id == draft_id))
+    draft = db.scalar(select(OrderDraft).where(OrderDraft.id == draft_id).with_for_update())
     if not draft:
         raise AppError(code="DRAFT_NOT_FOUND", message="Order draft not found.", status_code=404)
 

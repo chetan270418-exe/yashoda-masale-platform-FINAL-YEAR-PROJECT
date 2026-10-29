@@ -1,6 +1,7 @@
 """Tests for Whitelisted Tools, RBAC, and Audit Logging (Rules 60, 61, 62, 65)."""
 
 import uuid
+from decimal import Decimal
 
 import pytest
 from sqlalchemy import select
@@ -13,6 +14,7 @@ from app.ai.tools import (
     execute_tool,
 )
 from app.auth.models import User
+from app.catalog.models import Category, PriceList, PriceListItem, Product, ProductVariant
 from tests.conftest import _make_user
 
 
@@ -90,15 +92,43 @@ def test_dealer_history_isolation(db: Session, owner_user: User, dealer_user: Us
 
 def test_create_order_draft_creates_draft_requiring_human_approval(db: Session, dealer_user: User):
     """create_order_draft produces DRAFT status pending human confirmation (Rule 62)."""
-    res = execute_tool(db, dealer_user, "create_order_draft", {"notes": "Monthly order"})
+    cat = Category(name=f"Cat-{uuid.uuid4().hex[:6]}")
+    db.add(cat)
+    db.flush()
+    prod = Product(name=f"Prod-{uuid.uuid4().hex[:6]}", category_id=cat.id)
+    db.add(prod)
+    db.flush()
+    var = ProductVariant(product_id=prod.id, sku=f"SKU-{uuid.uuid4().hex[:6]}", pack_size_g=500)
+    db.add(var)
+    db.flush()
+    dealer_pl = db.scalar(select(PriceList).where(PriceList.name == "DEALER"))
+    assert dealer_pl is not None
+    pl_item = PriceListItem(price_list_id=dealer_pl.id, variant_id=var.id, price=Decimal("150.00"))
+    db.add(pl_item)
+    db.commit()
+
+    res = execute_tool(
+        db,
+        dealer_user,
+        "create_order_draft",
+        {
+            "items": [{"variant_id": str(var.id), "quantity": "10"}],
+            "notes": "Monthly order",
+        },
+    )
     assert res["status"] == "draft"
     assert res["requires_human_approval"] is True
+    assert res["total_estimated"] == "1500.00"
 
     draft_id = uuid.UUID(res["draft_id"])
     draft_record = db.scalar(select(OrderDraft).where(OrderDraft.id == draft_id))
     assert draft_record is not None
     assert draft_record.status == "draft"
     assert draft_record.customer_id == dealer_user.id
+    assert len(draft_record.items) == 1
+    assert draft_record.items[0]["sku"] == var.sku
+    assert draft_record.items[0]["unit_price"] == "150.00"
+    assert draft_record.items[0]["line_total"] == "1500.00"
 
 
 def test_unknown_tool_attempt_rejected_and_logged_denied(db: Session, owner_user: User):

@@ -9,6 +9,7 @@ from sqlalchemy import create_engine, event, text
 from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import NullPool, StaticPool
 
+from app.ai.router import ai_agent_rate_limiter, ai_chat_rate_limiter
 from app.auth.dependencies import login_rate_limiter
 from app.auth.models import Role, User
 from app.auth.security import hash_password
@@ -61,6 +62,8 @@ _TestSession = sessionmaker(bind=_engine, expire_on_commit=False)
 def _setup_db():
     """Create all tables before each test and drop them afterwards."""
     login_rate_limiter.reset()
+    ai_chat_rate_limiter.reset()
+    ai_agent_rate_limiter.reset()
     Base.metadata.create_all(bind=_engine)
 
     # Seed canonical 6 roles and 3 price lists
