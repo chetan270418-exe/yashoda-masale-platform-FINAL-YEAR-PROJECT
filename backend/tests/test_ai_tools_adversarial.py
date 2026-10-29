@@ -67,9 +67,7 @@ from tests.conftest import _make_user
 
 @pytest.fixture
 def owner_user(db: Session) -> User:
-    return _make_user(
-        db, email=f"owner-adv-{uuid.uuid4().hex[:6]}@example.com", role_name="owner"
-    )
+    return _make_user(db, email=f"owner-adv-{uuid.uuid4().hex[:6]}@example.com", role_name="owner")
 
 
 @pytest.fixture
@@ -102,9 +100,7 @@ def factory_user(db: Session) -> User:
 
 @pytest.fixture
 def warehouse_user(db: Session) -> User:
-    return _make_user(
-        db, email=f"wh-adv-{uuid.uuid4().hex[:6]}@example.com", role_name="warehouse"
-    )
+    return _make_user(db, email=f"wh-adv-{uuid.uuid4().hex[:6]}@example.com", role_name="warehouse")
 
 
 def _create_catalog_item(

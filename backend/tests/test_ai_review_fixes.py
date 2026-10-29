@@ -247,9 +247,7 @@ def test_create_order_draft_rejects_unknown_variant(db: Session, dealer_user: Us
 
 def test_create_order_draft_rejects_inactive_variant(db: Session, dealer_user: User):
     """Inactive variant must be rejected."""
-    _, var = _setup_variant_with_prices(
-        db, dealer_price=Decimal("100.00"), is_variant_active=False
-    )
+    _, var = _setup_variant_with_prices(db, dealer_price=Decimal("100.00"), is_variant_active=False)
     with pytest.raises(ToolArgumentError) as exc_info:
         execute_tool(
             db,
@@ -262,9 +260,7 @@ def test_create_order_draft_rejects_inactive_variant(db: Session, dealer_user: U
 
 def test_create_order_draft_rejects_inactive_product(db: Session, dealer_user: User):
     """Variant belonging to an inactive product must be rejected."""
-    _, var = _setup_variant_with_prices(
-        db, dealer_price=Decimal("100.00"), is_product_active=False
-    )
+    _, var = _setup_variant_with_prices(db, dealer_price=Decimal("100.00"), is_product_active=False)
     with pytest.raises(ToolArgumentError) as exc_info:
         execute_tool(
             db,

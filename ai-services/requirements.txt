@@ -1,4 +1,0 @@
-# Yashoda SpiceChain AI - Standalone AI Services Dependencies
-# Uses Python standard library for maximum portability and zero-bloat deployment.
-pytest>=7.0.0
-pytest-asyncio>=0.20.0

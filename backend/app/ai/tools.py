@@ -45,6 +45,16 @@ class ToolArgumentError(AppError):
         super().__init__(code="TOOL_INVALID_ARGS", message=message, status_code=400)
 
 
+# Whitelisted tool role permissions (Rule 61)
+TOOL_PERMISSIONS: dict[str, list[str]] = {
+    "check_stock": ["owner", "factory", "warehouse", "distributor", "dealer"],
+    "get_sales_summary": ["owner"],
+    "get_slow_movers": ["owner"],
+    "get_dealer_history": ["owner", "dealer", "distributor"],
+    "create_order_draft": ["owner", "dealer", "distributor"],
+}
+
+
 # Argument schemas for strict validation
 class CheckStockArgs(BaseModel):
     variant_id: uuid.UUID | None = None

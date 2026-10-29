@@ -102,9 +102,7 @@ def test_ast_source_code_locking_inspection():
     source = inspect.getsource(approve_order_draft)
     assert ".with_for_update()" in source, "approve_order_draft MUST call .with_for_update()"
     assert "select(OrderDraft)" in source, "Query must select OrderDraft entity"
-    assert "DRAFT_ALREADY_PROCESSED" in source, (
-        "Must raise DRAFT_ALREADY_PROCESSED when not draft"
-    )
+    assert "DRAFT_ALREADY_PROCESSED" in source, "Must raise DRAFT_ALREADY_PROCESSED when not draft"
     assert 'draft.status = "approved"' in source, "Must transition status to approved"
 
 
@@ -151,9 +149,7 @@ def test_sequential_quadruple_approval_rejection(client: TestClient, db: Session
     assert len(orders) == 1, f"Expected 1 order, found {len(orders)}"
     assert str(orders[0].id) == created_order_id
 
-    order_items = db.scalars(
-        select(OrderItem).where(OrderItem.order_id == orders[0].id)
-    ).all()
+    order_items = db.scalars(select(OrderItem).where(OrderItem.order_id == orders[0].id)).all()
     assert len(order_items) == 2, f"Expected 2 order items, found {len(order_items)}"
     variant_ids_in_order = {str(item.variant_id) for item in order_items}
     expected_variant_ids = {str(v.id) for v in variants}
@@ -211,12 +207,8 @@ def test_cross_user_approval_security_matrix(client: TestClient, db: Session):
     - Unauthenticated request -> 401 Unauthorized.
     - Owner -> 200 OK (Owner is allowed to approve on behalf of dealer).
     """
-    dealer1 = _make_user(
-        db, email=f"d1-m-{uuid.uuid4().hex[:6]}@example.com", role_name="dealer"
-    )
-    dealer2 = _make_user(
-        db, email=f"d2-m-{uuid.uuid4().hex[:6]}@example.com", role_name="dealer"
-    )
+    dealer1 = _make_user(db, email=f"d1-m-{uuid.uuid4().hex[:6]}@example.com", role_name="dealer")
+    dealer2 = _make_user(db, email=f"d2-m-{uuid.uuid4().hex[:6]}@example.com", role_name="dealer")
     consumer = _make_user(
         db, email=f"cons-m-{uuid.uuid4().hex[:6]}@example.com", role_name="consumer"
     )
@@ -229,9 +221,7 @@ def test_cross_user_approval_security_matrix(client: TestClient, db: Session):
     distributor = _make_user(
         db, email=f"dist-m-{uuid.uuid4().hex[:6]}@example.com", role_name="distributor"
     )
-    owner = _make_user(
-        db, email=f"own-m-{uuid.uuid4().hex[:6]}@example.com", role_name="owner"
-    )
+    owner = _make_user(db, email=f"own-m-{uuid.uuid4().hex[:6]}@example.com", role_name="owner")
 
     draft, _ = _create_test_draft(db, dealer1, status="draft")
 
@@ -244,9 +234,9 @@ def test_cross_user_approval_security_matrix(client: TestClient, db: Session):
     for unauth_user in unauthorized_users:
         unauth_headers = _get_auth_header(client, unauth_user)
         resp = client.post(f"/api/v1/ai/drafts/{draft.id}/approve", headers=unauth_headers)
-        assert resp.status_code == 403, (
-            f"Expected 403 for {unauth_user.email}, got {resp.status_code}"
-        )
+        assert (
+            resp.status_code == 403
+        ), f"Expected 403 for {unauth_user.email}, got {resp.status_code}"
         assert resp.json()["code"] == "FORBIDDEN"
 
     # Verify draft remains unmodified
@@ -299,15 +289,11 @@ def test_ai_chat_burst_20_and_21st_blocked_with_details(client: TestClient):
 
     # Immediate reset unblocks
     ai_chat_rate_limiter.reset()
-    unblocked = client.post(
-        "/api/v1/ai/chat", json={"query": "Query after reset: should work"}
-    )
+    unblocked = client.post("/api/v1/ai/chat", json={"query": "Query after reset: should work"})
     assert unblocked.status_code == 200
 
 
-def test_ai_agent_query_burst_30_and_31st_blocked_with_details(
-    client: TestClient, db: Session
-):
+def test_ai_agent_query_burst_30_and_31st_blocked_with_details(client: TestClient, db: Session):
     """Burst test POST /api/v1/ai/agent/query: 30 succeed, 31st receives 429 with retry_after."""
     ai_agent_rate_limiter.reset()
     dealer = _make_user(
@@ -369,9 +355,7 @@ def test_rate_limiter_endpoint_bucket_isolation(client: TestClient, db: Session)
         json={"prompt": "Agent query during chat block"},
         headers=headers,
     )
-    assert agent_res.status_code == 200, (
-        "Agent query should NOT be affected by chat rate limit"
-    )
+    assert agent_res.status_code == 200, "Agent query should NOT be affected by chat rate limit"
 
 
 def test_rate_limiter_sliding_window_expiration():
