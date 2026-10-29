@@ -44,12 +44,12 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** no overselling in the concurrency test; FEFO tests pass.
 
 ## M5 — Ordering (Weeks 13–15)
-- [ ] T-050 (M2) Orders, items with price snapshot, state machine, idempotency.
-- [ ] T-051 (M2) Reserve, pack, dispatch, cancel, return endpoints.
+- [x] T-050 (M2) Orders, items with price snapshot, state machine, idempotency.
+- [x] T-051 (M2) Reserve, pack, dispatch, cancel, return endpoints.
 - [ ] T-052 (M2) Invoices, payment status records, shipments and events.
 - [ ] T-053 (M1) Store: catalogue, product, cart, checkout, my orders, tracking.
 - [ ] T-054 (M1) Partner portal: dashboard, bulk builder, repeat order, invoices.
-- [ ] T-055 (M4) End-to-end test: order to delivery with stock checks.
+- [x] T-055 (M4) End-to-end test: order to delivery with stock checks.
 **Done when:** consumer and dealer orders complete end to end with consistent stock.
 
 ## M6 — QR and dashboards (Week 16)

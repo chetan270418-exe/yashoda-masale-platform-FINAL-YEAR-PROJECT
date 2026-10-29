@@ -1,0 +1,19 @@
+{
+  "dataset_type": "synthetic_demo_data",
+  "seed": 42,
+  "as_of_date": "2026-10-01",
+  "warning": "All records are fictional; not actual sponsor data.",
+  "record_counts": {
+    "products": 100,
+    "variants": 500,
+    "suppliers": 12,
+    "warehouses": 2,
+    "production_batches": 200,
+    "inventory_balances": 151,
+    "stock_movements": 151,
+    "dealers": 150,
+    "orders": 10000,
+    "order_items": 25101,
+    "sales_history_daily": 73000
+  }
+}

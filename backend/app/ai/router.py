@@ -115,34 +115,65 @@ def approve_order_draft(
             status_code=400,
         )
 
+    from app.orders.service import reserve_order
+
     # 1. Update draft status to approved
     draft.status = "approved"
 
-    # 2. Create actual order in orders table
+    # 2. Create actual order in orders table (M5 Model)
     order_num = f"ORD-AI-{uuid.uuid4().hex[:8].upper()}"
+    draft_total = Decimal(str(draft.total_estimated or "0.00")).quantize(Decimal("0.01"))
     order = Order(
         id=uuid.uuid4(),
         order_number=order_num,
+        customer_id=draft.customer_id,
+        order_type="sales",
         status="open",
+        idempotency_key=f"ai-draft-{draft.id}",
+        total_amount=draft_total,
+        currency="INR",
     )
     db.add(order)
     db.flush()
 
-    # 3. Add order items
+    # 3. Add order items with immutable price snapshot (Invariants B8, B12)
+    accumulated_total = Decimal("0.00")
     for it in draft.items:
         v_id = (
             uuid.UUID(it["variant_id"]) if isinstance(it["variant_id"], str) else it["variant_id"]
         )
         qty = Decimal(str(it["quantity"]))
+        unit_price = Decimal(str(it.get("unit_price", "0.00"))).quantize(Decimal("0.01"))
+        line_total = Decimal(str(it.get("line_total", unit_price * qty))).quantize(Decimal("0.01"))
+        price_list_code = str(
+            it.get("price_list_code", "DEALER" if user_role == "dealer" else "MRP")
+        )
+        accumulated_total += line_total
+
         item = OrderItem(
             id=uuid.uuid4(),
             order_id=order.id,
             variant_id=v_id,
             quantity=qty,
+            unit_price_snapshot=unit_price,
+            price_list_code=price_list_code,
+            line_total=line_total,
         )
         db.add(item)
 
+    if draft_total == Decimal("0.00") and accumulated_total > Decimal("0.00"):
+        order.total_amount = accumulated_total
+
     db.commit()
+
+    # 4. Initiate FEFO stock reservation upon draft approval (Requirement R3)
+    try:
+        reserve_order(db=db, order_id=order.id, actor_id=current_user.id)
+    except AppError:
+        # If warehouse inventory is insufficient, the order remains in 'open' status
+        pass
+
+    db.refresh(order)
 
     return DraftApprovalResponse(
         draft_id=draft.id,

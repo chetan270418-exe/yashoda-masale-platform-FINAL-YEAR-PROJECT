@@ -25,6 +25,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
+from app.orders.models import Order, OrderItem
 
 
 class Warehouse(Base):
@@ -91,68 +92,6 @@ class ProductionBatch(Base):
     def __repr__(self) -> str:
         return f"<ProductionBatch {self.batch_code} status={self.status}>"
 
-
-class Order(Base):
-    """Customer order record (minimal schema for inventory reservation linkage)."""
-
-    __tablename__ = "orders"
-
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    order_number: Mapped[str] = mapped_column(String(80), unique=True, nullable=False, index=True)
-    status: Mapped[str] = mapped_column(
-        String(24), default="open", server_default="open", nullable=False
-    )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
-    )
-
-    items: Mapped[list["OrderItem"]] = relationship(
-        back_populates="order", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        CheckConstraint(
-            "status IN ('open','reserved','partially_shipped','shipped','cancelled')",
-            name="ck_orders_status",
-        ),
-    )
-
-    def __repr__(self) -> str:
-        return f"<Order {self.order_number} status={self.status}>"
-
-
-class OrderItem(Base):
-    """Item line in a customer order."""
-
-    __tablename__ = "order_items"
-
-    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    order_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("orders.id", ondelete="CASCADE"), nullable=False
-    )
-    variant_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("product_variants.id", ondelete="RESTRICT"), nullable=False
-    )
-    quantity: Mapped[Decimal] = mapped_column(Numeric(14, 3), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
-
-    order: Mapped[Order] = relationship(back_populates="items")
-    reservations: Mapped[list["StockReservation"]] = relationship(
-        back_populates="order_item", cascade="all, delete-orphan"
-    )
-
-    __table_args__ = (
-        CheckConstraint("quantity > 0", name="ck_order_items_quantity_positive"),
-        Index("ix_order_items_order", "order_id"),
-    )
-
-    def __repr__(self) -> str:
-        return f"<OrderItem {self.id} variant={self.variant_id} qty={self.quantity}>"
 
 
 class InventoryBalance(Base):
@@ -281,3 +220,14 @@ class StockMovement(Base):
 
     def __repr__(self) -> str:
         return f"<StockMovement {self.movement_type} qty={self.quantity} op={self.operation_key}>"
+
+
+__all__ = [
+    "Warehouse",
+    "ProductionBatch",
+    "Order",
+    "OrderItem",
+    "InventoryBalance",
+    "StockReservation",
+    "StockMovement",
+]

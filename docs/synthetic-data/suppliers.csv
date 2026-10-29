@@ -1,0 +1,13 @@
+﻿supplier_id,name,contact_name,city,state,email,phone,is_synthetic
+SUP-001,Sahyadri Agro Supplies,Arjun Jadhav,Nashik,Maharashtra,supplier01@example.test,9000000001,true
+SUP-002,Deccan Spice Traders,Kavya Pawar,Nagpur,Maharashtra,supplier02@example.test,9000000002,true
+SUP-003,Western Ghats Commodities,Rohan More,Sangli,Maharashtra,supplier03@example.test,9000000003,true
+SUP-004,Konkan Farm Produce,Tanvi Joshi,Aurangabad,Maharashtra,supplier04@example.test,9000000004,true
+SUP-005,Reliable Food Ingredients,Priya Patil,Pune,Maharashtra,supplier05@example.test,9000000005,true
+SUP-006,Harvest Basket Trading,Mihir Jadhav,Nashik,Maharashtra,supplier06@example.test,9000000006,true
+SUP-007,Maharashtra Spice Link,Aditi Pawar,Nagpur,Maharashtra,supplier07@example.test,9000000007,true
+SUP-008,Green Field Suppliers,Diya More,Sangli,Maharashtra,supplier08@example.test,9000000008,true
+SUP-009,Market Square Commodities,Meera Joshi,Aurangabad,Maharashtra,supplier09@example.test,9000000009,true
+SUP-010,Sunrise Raw Materials,Saanvi Patil,Pune,Maharashtra,supplier10@example.test,9000000010,true
+SUP-011,Golden Grain Partners,Vedant Jadhav,Nashik,Maharashtra,supplier11@example.test,9000000011,true
+SUP-012,Pure Origin Traders,Om Pawar,Nagpur,Maharashtra,supplier12@example.test,9000000012,true

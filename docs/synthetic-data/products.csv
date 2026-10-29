@@ -1,0 +1,101 @@
+﻿product_id,sku_family,name,category,primary_ingredient,description,is_active
+PRD-0001,YS-0001,Turmeric Powder,Powders,Turmeric,Synthetic demo product: Turmeric Powder; verify specifications before production use.,true
+PRD-0002,YS-0002,Red Chilli Powder,Powders,Chilli,Synthetic demo product: Red Chilli Powder; verify specifications before production use.,true
+PRD-0003,YS-0003,Coriander Powder,Powders,Coriander,Synthetic demo product: Coriander Powder; verify specifications before production use.,true
+PRD-0004,YS-0004,Cumin Powder,Powders,Cumin,Synthetic demo product: Cumin Powder; verify specifications before production use.,true
+PRD-0005,YS-0005,Garam Masala,Masala Blends,Blend,Synthetic demo product: Garam Masala; verify specifications before production use.,true
+PRD-0006,YS-0006,Kitchen King Masala,Masala Blends,Blend,Synthetic demo product: Kitchen King Masala; verify specifications before production use.,true
+PRD-0007,YS-0007,Goda Masala,Masala Blends,Blend,Synthetic demo product: Goda Masala; verify specifications before production use.,true
+PRD-0008,YS-0008,Ginger Powder,Powders,Ginger,Synthetic demo product: Ginger Powder; verify specifications before production use.,true
+PRD-0009,YS-0009,Garlic Powder,Powders,Garlic,Synthetic demo product: Garlic Powder; verify specifications before production use.,true
+PRD-0010,YS-0010,Black Pepper Powder,Powders,Pepper,Synthetic demo product: Black Pepper Powder; verify specifications before production use.,true
+PRD-0011,YS-0011,Cumin Seeds,Whole Spices,Cumin,Synthetic demo product: Cumin Seeds; verify specifications before production use.,true
+PRD-0012,YS-0012,Coriander Seeds,Whole Spices,Coriander,Synthetic demo product: Coriander Seeds; verify specifications before production use.,true
+PRD-0013,YS-0013,Mustard Seeds,Whole Spices,Mustard,Synthetic demo product: Mustard Seeds; verify specifications before production use.,true
+PRD-0014,YS-0014,Fennel Seeds,Whole Spices,Fennel,Synthetic demo product: Fennel Seeds; verify specifications before production use.,true
+PRD-0015,YS-0015,Cardamom,Whole Spices,Cardamom,Synthetic demo product: Cardamom; verify specifications before production use.,true
+PRD-0016,YS-0016,Cinnamon,Whole Spices,Cinnamon,Synthetic demo product: Cinnamon; verify specifications before production use.,true
+PRD-0017,YS-0017,Cloves,Whole Spices,Clove,Synthetic demo product: Cloves; verify specifications before production use.,true
+PRD-0018,YS-0018,Bay Leaf,Whole Spices,Bay Leaf,Synthetic demo product: Bay Leaf; verify specifications before production use.,true
+PRD-0019,YS-0019,Black Salt,Seasonings,Salt,Synthetic demo product: Black Salt; verify specifications before production use.,true
+PRD-0020,YS-0020,Chaat Masala,Masala Blends,Blend,Synthetic demo product: Chaat Masala; verify specifications before production use.,true
+PRD-0021,YS-0021,Turmeric Powder Premium,Powders,Turmeric,Synthetic demo product: Turmeric Powder Premium; verify specifications before production use.,true
+PRD-0022,YS-0022,Red Chilli Powder Classic,Powders,Chilli,Synthetic demo product: Red Chilli Powder Classic; verify specifications before production use.,true
+PRD-0023,YS-0023,Coriander Powder Premium,Powders,Coriander,Synthetic demo product: Coriander Powder Premium; verify specifications before production use.,true
+PRD-0024,YS-0024,Cumin Powder Classic,Powders,Cumin,Synthetic demo product: Cumin Powder Classic; verify specifications before production use.,true
+PRD-0025,YS-0025,Garam Masala Premium,Masala Blends,Blend,Synthetic demo product: Garam Masala Premium; verify specifications before production use.,true
+PRD-0026,YS-0026,Kitchen King Masala Classic,Masala Blends,Blend,Synthetic demo product: Kitchen King Masala Classic; verify specifications before production use.,true
+PRD-0027,YS-0027,Goda Masala Premium,Masala Blends,Blend,Synthetic demo product: Goda Masala Premium; verify specifications before production use.,true
+PRD-0028,YS-0028,Ginger Powder Classic,Powders,Ginger,Synthetic demo product: Ginger Powder Classic; verify specifications before production use.,true
+PRD-0029,YS-0029,Garlic Powder Premium,Powders,Garlic,Synthetic demo product: Garlic Powder Premium; verify specifications before production use.,true
+PRD-0030,YS-0030,Black Pepper Powder Classic,Powders,Pepper,Synthetic demo product: Black Pepper Powder Classic; verify specifications before production use.,true
+PRD-0031,YS-0031,Cumin Seeds Premium,Whole Spices,Cumin,Synthetic demo product: Cumin Seeds Premium; verify specifications before production use.,true
+PRD-0032,YS-0032,Coriander Seeds Classic,Whole Spices,Coriander,Synthetic demo product: Coriander Seeds Classic; verify specifications before production use.,true
+PRD-0033,YS-0033,Mustard Seeds Premium,Whole Spices,Mustard,Synthetic demo product: Mustard Seeds Premium; verify specifications before production use.,true
+PRD-0034,YS-0034,Fennel Seeds Classic,Whole Spices,Fennel,Synthetic demo product: Fennel Seeds Classic; verify specifications before production use.,true
+PRD-0035,YS-0035,Cardamom Premium,Whole Spices,Cardamom,Synthetic demo product: Cardamom Premium; verify specifications before production use.,true
+PRD-0036,YS-0036,Cinnamon Classic,Whole Spices,Cinnamon,Synthetic demo product: Cinnamon Classic; verify specifications before production use.,true
+PRD-0037,YS-0037,Cloves Premium,Whole Spices,Clove,Synthetic demo product: Cloves Premium; verify specifications before production use.,true
+PRD-0038,YS-0038,Bay Leaf Classic,Whole Spices,Bay Leaf,Synthetic demo product: Bay Leaf Classic; verify specifications before production use.,true
+PRD-0039,YS-0039,Black Salt Premium,Seasonings,Salt,Synthetic demo product: Black Salt Premium; verify specifications before production use.,true
+PRD-0040,YS-0040,Chaat Masala Classic,Masala Blends,Blend,Synthetic demo product: Chaat Masala Classic; verify specifications before production use.,true
+PRD-0041,YS-0041,Turmeric Powder Premium,Powders,Turmeric,Synthetic demo product: Turmeric Powder Premium; verify specifications before production use.,true
+PRD-0042,YS-0042,Red Chilli Powder Classic,Powders,Chilli,Synthetic demo product: Red Chilli Powder Classic; verify specifications before production use.,true
+PRD-0043,YS-0043,Coriander Powder Premium,Powders,Coriander,Synthetic demo product: Coriander Powder Premium; verify specifications before production use.,true
+PRD-0044,YS-0044,Cumin Powder Classic,Powders,Cumin,Synthetic demo product: Cumin Powder Classic; verify specifications before production use.,true
+PRD-0045,YS-0045,Garam Masala Premium,Masala Blends,Blend,Synthetic demo product: Garam Masala Premium; verify specifications before production use.,true
+PRD-0046,YS-0046,Kitchen King Masala Classic,Masala Blends,Blend,Synthetic demo product: Kitchen King Masala Classic; verify specifications before production use.,true
+PRD-0047,YS-0047,Goda Masala Premium,Masala Blends,Blend,Synthetic demo product: Goda Masala Premium; verify specifications before production use.,true
+PRD-0048,YS-0048,Ginger Powder Classic,Powders,Ginger,Synthetic demo product: Ginger Powder Classic; verify specifications before production use.,true
+PRD-0049,YS-0049,Garlic Powder Premium,Powders,Garlic,Synthetic demo product: Garlic Powder Premium; verify specifications before production use.,true
+PRD-0050,YS-0050,Black Pepper Powder Classic,Powders,Pepper,Synthetic demo product: Black Pepper Powder Classic; verify specifications before production use.,true
+PRD-0051,YS-0051,Cumin Seeds Premium,Whole Spices,Cumin,Synthetic demo product: Cumin Seeds Premium; verify specifications before production use.,true
+PRD-0052,YS-0052,Coriander Seeds Classic,Whole Spices,Coriander,Synthetic demo product: Coriander Seeds Classic; verify specifications before production use.,true
+PRD-0053,YS-0053,Mustard Seeds Premium,Whole Spices,Mustard,Synthetic demo product: Mustard Seeds Premium; verify specifications before production use.,true
+PRD-0054,YS-0054,Fennel Seeds Classic,Whole Spices,Fennel,Synthetic demo product: Fennel Seeds Classic; verify specifications before production use.,true
+PRD-0055,YS-0055,Cardamom Premium,Whole Spices,Cardamom,Synthetic demo product: Cardamom Premium; verify specifications before production use.,true
+PRD-0056,YS-0056,Cinnamon Classic,Whole Spices,Cinnamon,Synthetic demo product: Cinnamon Classic; verify specifications before production use.,true
+PRD-0057,YS-0057,Cloves Premium,Whole Spices,Clove,Synthetic demo product: Cloves Premium; verify specifications before production use.,true
+PRD-0058,YS-0058,Bay Leaf Classic,Whole Spices,Bay Leaf,Synthetic demo product: Bay Leaf Classic; verify specifications before production use.,true
+PRD-0059,YS-0059,Black Salt Premium,Seasonings,Salt,Synthetic demo product: Black Salt Premium; verify specifications before production use.,true
+PRD-0060,YS-0060,Chaat Masala Classic,Masala Blends,Blend,Synthetic demo product: Chaat Masala Classic; verify specifications before production use.,true
+PRD-0061,YS-0061,Turmeric Powder Premium,Powders,Turmeric,Synthetic demo product: Turmeric Powder Premium; verify specifications before production use.,true
+PRD-0062,YS-0062,Red Chilli Powder Classic,Powders,Chilli,Synthetic demo product: Red Chilli Powder Classic; verify specifications before production use.,true
+PRD-0063,YS-0063,Coriander Powder Premium,Powders,Coriander,Synthetic demo product: Coriander Powder Premium; verify specifications before production use.,true
+PRD-0064,YS-0064,Cumin Powder Classic,Powders,Cumin,Synthetic demo product: Cumin Powder Classic; verify specifications before production use.,true
+PRD-0065,YS-0065,Garam Masala Premium,Masala Blends,Blend,Synthetic demo product: Garam Masala Premium; verify specifications before production use.,true
+PRD-0066,YS-0066,Kitchen King Masala Classic,Masala Blends,Blend,Synthetic demo product: Kitchen King Masala Classic; verify specifications before production use.,true
+PRD-0067,YS-0067,Goda Masala Premium,Masala Blends,Blend,Synthetic demo product: Goda Masala Premium; verify specifications before production use.,true
+PRD-0068,YS-0068,Ginger Powder Classic,Powders,Ginger,Synthetic demo product: Ginger Powder Classic; verify specifications before production use.,true
+PRD-0069,YS-0069,Garlic Powder Premium,Powders,Garlic,Synthetic demo product: Garlic Powder Premium; verify specifications before production use.,true
+PRD-0070,YS-0070,Black Pepper Powder Classic,Powders,Pepper,Synthetic demo product: Black Pepper Powder Classic; verify specifications before production use.,true
+PRD-0071,YS-0071,Cumin Seeds Premium,Whole Spices,Cumin,Synthetic demo product: Cumin Seeds Premium; verify specifications before production use.,true
+PRD-0072,YS-0072,Coriander Seeds Classic,Whole Spices,Coriander,Synthetic demo product: Coriander Seeds Classic; verify specifications before production use.,true
+PRD-0073,YS-0073,Mustard Seeds Premium,Whole Spices,Mustard,Synthetic demo product: Mustard Seeds Premium; verify specifications before production use.,true
+PRD-0074,YS-0074,Fennel Seeds Classic,Whole Spices,Fennel,Synthetic demo product: Fennel Seeds Classic; verify specifications before production use.,true
+PRD-0075,YS-0075,Cardamom Premium,Whole Spices,Cardamom,Synthetic demo product: Cardamom Premium; verify specifications before production use.,true
+PRD-0076,YS-0076,Cinnamon Classic,Whole Spices,Cinnamon,Synthetic demo product: Cinnamon Classic; verify specifications before production use.,true
+PRD-0077,YS-0077,Cloves Premium,Whole Spices,Clove,Synthetic demo product: Cloves Premium; verify specifications before production use.,true
+PRD-0078,YS-0078,Bay Leaf Classic,Whole Spices,Bay Leaf,Synthetic demo product: Bay Leaf Classic; verify specifications before production use.,true
+PRD-0079,YS-0079,Black Salt Premium,Seasonings,Salt,Synthetic demo product: Black Salt Premium; verify specifications before production use.,true
+PRD-0080,YS-0080,Chaat Masala Classic,Masala Blends,Blend,Synthetic demo product: Chaat Masala Classic; verify specifications before production use.,true
+PRD-0081,YS-0081,Turmeric Powder Premium,Powders,Turmeric,Synthetic demo product: Turmeric Powder Premium; verify specifications before production use.,true
+PRD-0082,YS-0082,Red Chilli Powder Classic,Powders,Chilli,Synthetic demo product: Red Chilli Powder Classic; verify specifications before production use.,true
+PRD-0083,YS-0083,Coriander Powder Premium,Powders,Coriander,Synthetic demo product: Coriander Powder Premium; verify specifications before production use.,true
+PRD-0084,YS-0084,Cumin Powder Classic,Powders,Cumin,Synthetic demo product: Cumin Powder Classic; verify specifications before production use.,true
+PRD-0085,YS-0085,Garam Masala Premium,Masala Blends,Blend,Synthetic demo product: Garam Masala Premium; verify specifications before production use.,true
+PRD-0086,YS-0086,Kitchen King Masala Classic,Masala Blends,Blend,Synthetic demo product: Kitchen King Masala Classic; verify specifications before production use.,true
+PRD-0087,YS-0087,Goda Masala Premium,Masala Blends,Blend,Synthetic demo product: Goda Masala Premium; verify specifications before production use.,true
+PRD-0088,YS-0088,Ginger Powder Classic,Powders,Ginger,Synthetic demo product: Ginger Powder Classic; verify specifications before production use.,true
+PRD-0089,YS-0089,Garlic Powder Premium,Powders,Garlic,Synthetic demo product: Garlic Powder Premium; verify specifications before production use.,true
+PRD-0090,YS-0090,Black Pepper Powder Classic,Powders,Pepper,Synthetic demo product: Black Pepper Powder Classic; verify specifications before production use.,true
+PRD-0091,YS-0091,Cumin Seeds Premium,Whole Spices,Cumin,Synthetic demo product: Cumin Seeds Premium; verify specifications before production use.,true
+PRD-0092,YS-0092,Coriander Seeds Classic,Whole Spices,Coriander,Synthetic demo product: Coriander Seeds Classic; verify specifications before production use.,true
+PRD-0093,YS-0093,Mustard Seeds Premium,Whole Spices,Mustard,Synthetic demo product: Mustard Seeds Premium; verify specifications before production use.,true
+PRD-0094,YS-0094,Fennel Seeds Classic,Whole Spices,Fennel,Synthetic demo product: Fennel Seeds Classic; verify specifications before production use.,true
+PRD-0095,YS-0095,Cardamom Premium,Whole Spices,Cardamom,Synthetic demo product: Cardamom Premium; verify specifications before production use.,true
+PRD-0096,YS-0096,Cinnamon Classic,Whole Spices,Cinnamon,Synthetic demo product: Cinnamon Classic; verify specifications before production use.,true
+PRD-0097,YS-0097,Cloves Premium,Whole Spices,Clove,Synthetic demo product: Cloves Premium; verify specifications before production use.,true
+PRD-0098,YS-0098,Bay Leaf Classic,Whole Spices,Bay Leaf,Synthetic demo product: Bay Leaf Classic; verify specifications before production use.,true
+PRD-0099,YS-0099,Black Salt Premium,Seasonings,Salt,Synthetic demo product: Black Salt Premium; verify specifications before production use.,true
+PRD-0100,YS-0100,Chaat Masala Classic,Masala Blends,Blend,Synthetic demo product: Chaat Masala Classic; verify specifications before production use.,true

@@ -1,0 +1,3 @@
+﻿warehouse_id,name,region,is_primary
+WH-MH-01,Primary Warehouse,Maharashtra,true
+WH-MH-02,Dispatch Warehouse,Maharashtra,false
