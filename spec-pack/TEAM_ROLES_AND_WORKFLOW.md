@@ -28,13 +28,18 @@ transactions and authorization.
 
 ## Member 4 --- Chetan Sonawane: Backend Architecture and AI
 
-**Primary areas:** `backend/` and `ai-services/` - Coordinate backend
+**Primary areas:** `backend/` and `backend/app/ai/` - Coordinate backend
 architecture and integration conventions. - Implement or coordinate
 workflow rules and authorization integration. - Build AI interfaces,
 forecasting evaluation, grounded assistant and dealer reorder draft
 workflow. - Ensure AI uses approved backend functions rather than
 arbitrary database access. - Coordinate integration, testing and
 deployment.
+
+The AI subsystem lives inside `backend/app/ai/`, not in the top-level
+`ai-services/` directory, so it runs in the same process as the business data it
+reasons about. `ai-services/README.md` explains why there is no duplicated copy
+there.
 
 ## Shared responsibility
 

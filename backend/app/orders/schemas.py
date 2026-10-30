@@ -24,8 +24,9 @@ class OrderItemCreate(BaseModel):
     quantity: Decimal = Field(
         ...,
         gt=Decimal("0"),
+        le=Decimal("10000"),
         decimal_places=3,
-        description="Quantity ordered. Must be strictly positive with up to 3 decimal places.",
+        description="Quantity ordered. Must be positive and <= 10,000 (up to 3 decimal places).",
     )
 
     model_config = ConfigDict(
@@ -45,7 +46,8 @@ class OrderCreate(BaseModel):
     items: list[OrderItemCreate] = Field(
         ...,
         min_length=1,
-        description="List of order lines. Must contain at least one item.",
+        max_length=50,
+        description="List of order lines. Must contain between 1 and 50 items.",
     )
     idempotency_key: str | None = Field(
         None,
@@ -53,9 +55,9 @@ class OrderCreate(BaseModel):
         description="Optional client idempotency key (or via 'Idempotency-Key' header).",
     )
     order_type: str = Field(
-        "standard",
+        "sales",
         max_length=30,
-        description="Order classification (e.g. standard, wholesale, sample).",
+        description="Order classification (e.g. sales, wholesale, sample).",
     )
     warehouse_id: uuid.UUID | None = Field(
         None,
@@ -128,7 +130,7 @@ class OrderRead(BaseModel):
     id: uuid.UUID = Field(..., description="Unique order UUID")
     order_number: str = Field(..., description="Human-readable unique order code, e.g. ORD-XXXX")
     customer_id: uuid.UUID | None = Field(None, description="Owner customer User UUID")
-    order_type: str = Field("standard", description="Order type classification")
+    order_type: str = Field("sales", description="Order type classification")
     status: str = Field(..., description="Order lifecycle status")
     total_amount: Decimal = Field(
         ...,
@@ -153,7 +155,6 @@ class OrderReserveRequest(BaseModel):
             "Defaults to primary active warehouse if omitted."
         ),
     )
-
 
     model_config = ConfigDict(
         json_schema_extra={
@@ -224,7 +225,6 @@ class OrderReturnRequest(BaseModel):
                 ),
             }
         },
-
     )
 
 
@@ -243,3 +243,130 @@ class StockReservationRead(BaseModel):
     status: str = Field(..., description="Reservation status: 'active', 'consumed', 'released'")
     created_at: datetime = Field(..., description="Reservation creation timestamp")
 
+
+# ── Milestone M5 / T-052: Invoices & Shipments Schemas ───────────────────────
+
+
+class InvoiceRead(BaseModel):
+    """Read schema for a billing invoice."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        ser_json_decimal="string",
+    )
+
+    id: uuid.UUID
+    order_id: uuid.UUID
+    customer_id: uuid.UUID | None = None
+    invoice_number: str
+    total_amount: Decimal
+    currency: str = "INR"
+    payment_status: str
+    payment_method: str | None = None
+    payment_reference: str | None = None
+    paid_at: datetime | None = None
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+
+
+class InvoiceCreate(BaseModel):
+    """Payload to issue an invoice for an order."""
+
+    notes: str | None = Field(None, max_length=255, description="Optional invoice remarks.")
+
+
+class PaymentRecordRequest(BaseModel):
+    """Payload to record a payment for an invoice (Rule 91, D-009: simulated payment)."""
+
+    amount: Decimal = Field(
+        ..., gt=Decimal("0"), decimal_places=2, description="Paid amount in INR"
+    )
+    payment_method: str = Field(
+        "simulated_upi", max_length=50, description="Simulated payment method"
+    )
+    payment_reference: str | None = Field(
+        None, max_length=128, description="External transaction ID"
+    )
+    notes: str | None = Field(None, max_length=255)
+
+    model_config = ConfigDict(
+        ser_json_decimal="string",
+        json_schema_extra={
+            "example": {
+                "amount": "1250.00",
+                "payment_method": "simulated_upi",
+                "payment_reference": "UPI-REF-98124019",
+            }
+        },
+    )
+
+
+class ShipmentEventRead(BaseModel):
+    """Read schema for a shipment timeline event."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: uuid.UUID
+    shipment_id: uuid.UUID
+    event_type: str
+    location: str | None = None
+    description: str
+    event_at: datetime
+
+
+class ShipmentEventCreate(BaseModel):
+    """Payload to add a timeline event to a shipment."""
+
+    event_type: str = Field(
+        ...,
+        description="Event type (manifested, dispatched, in_transit, out_for_delivery, delivered)",
+    )
+    location: str | None = Field(None, max_length=100, description="Checkpoint location")
+    description: str = Field(..., max_length=255, description="Event status description")
+
+
+class ShipmentRead(BaseModel):
+    """Read schema for a logistics shipment."""
+
+    model_config = ConfigDict(
+        from_attributes=True,
+    )
+
+    id: uuid.UUID
+    order_id: uuid.UUID
+    shipment_number: str
+    carrier: str
+    tracking_ref: str | None = None
+    status: str
+    dispatched_at: datetime | None = None
+    delivered_at: datetime | None = None
+    notes: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    events: list[ShipmentEventRead] = Field(default_factory=list)
+
+
+class ShipmentCreate(BaseModel):
+    """Payload to create a shipment for an order."""
+
+    carrier: str = Field(
+        ..., min_length=1, max_length=100, description="Carrier name (e.g. BlueDart)"
+    )
+    tracking_ref: str | None = Field(
+        None, max_length=128, description="Carrier tracking / consignment reference"
+    )
+    notes: str | None = Field(None, max_length=255)
+
+
+class ShipmentStatusUpdateRequest(BaseModel):
+    """Payload to advance shipment status."""
+
+    status: str = Field(
+        ...,
+        description="Target status (in_transit, out_for_delivery, delivered, failed, returned)",
+    )
+    location: str | None = Field(None, max_length=100)
+    description: str | None = Field(None, max_length=255)

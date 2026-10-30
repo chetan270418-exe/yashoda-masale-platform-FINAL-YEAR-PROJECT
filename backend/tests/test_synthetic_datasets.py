@@ -117,3 +117,36 @@ def test_synthetic_order_items_m5_snapshots_b8_b12():
         assert qty > Decimal("0")
         assert snapshot >= Decimal("0")
         assert line_total >= Decimal("0")
+
+
+def test_synthetic_sales_history_has_per_product_seasonality():
+    """Products must not all share one seasonal curve.
+
+    If every product peaked in the same months, a forecasting model would only
+    have to learn one global pattern and would score far better than it really
+    would on real demand. Each product carries its own seasonal amplitude and
+    phase offset, so the catalogue as a whole peaks in many different months.
+    """
+    data_dir = _get_synthetic_data_dir()
+    sales_path = data_dir / "sales_history_daily.csv"
+
+    monthly_totals: dict[str, dict[int, int]] = {}
+    with open(sales_path, encoding="utf-8-sig") as f:
+        for row in csv.DictReader(f):
+            product_id = row["product_id"]
+            month = int(row["date"][5:7])
+            by_month = monthly_totals.setdefault(product_id, {})
+            by_month[month] = by_month.get(month, 0) + int(row["units_sold"])
+
+    assert len(monthly_totals) > 1, "expected more than one product in the sales history"
+
+    peak_months = {
+        product_id: max(months, key=lambda m: months[m])
+        for product_id, months in monthly_totals.items()
+    }
+    distinct_peaks = set(peak_months.values())
+
+    assert len(distinct_peaks) >= 5, (
+        "products share too few peak months, which means they share one "
+        f"seasonal curve: {sorted(distinct_peaks)}"
+    )

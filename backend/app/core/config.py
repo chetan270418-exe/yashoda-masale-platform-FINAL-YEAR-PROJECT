@@ -25,6 +25,19 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 60
     trust_proxy_headers: bool = False
 
+    # LLM provider (Decision D-010). The API key lives only in the environment,
+    # never in the repository and never in the frontend (Rule 33). Leaving the
+    # provider empty or "mock" keeps the app on the deterministic mock adapter
+    # so it runs offline and in CI (Rule 72).
+    llm_provider: str = "mock"
+    llm_api_key: str = ""
+    # Only needed to override a provider's default base URL, or to point the
+    # adapter at a self-hosted or proxied endpoint.
+    llm_base_url: str = ""
+    # Optional. Defaults to a sensible model for the chosen provider.
+    llm_model: str = ""
+    llm_timeout_seconds: int = 15
+
     @model_validator(mode="after")
     def validate_production_secrets(self) -> "Settings":
         """Refuse in non-local environments if JWT_SECRET is empty or uses dev default."""

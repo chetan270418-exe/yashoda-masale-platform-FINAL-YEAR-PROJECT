@@ -46,7 +46,12 @@ def chat_with_rag(
 ) -> ChatResponse:
     """Public / Customer RAG assistant with source citations (Rules 63, 64)."""
     result = answer_rag_query(request.query)
-    return ChatResponse(answer=result["answer"], sources=result["sources"])
+    return ChatResponse(
+        answer=result["answer"],
+        sources=result["sources"],
+        cited_sources=result.get("cited_sources", []),
+        invalid_citations=result.get("invalid_citations", 0),
+    )
 
 
 @router.post(
@@ -115,6 +120,7 @@ def approve_order_draft(
             status_code=400,
         )
 
+    from app.audit.service import log_action
     from app.orders.service import reserve_order
 
     # 1. Update draft status to approved
@@ -128,7 +134,7 @@ def approve_order_draft(
         order_number=order_num,
         customer_id=draft.customer_id,
         order_type="sales",
-        status="open",
+        status="pending",
         idempotency_key=f"ai-draft-{draft.id}",
         total_amount=draft_total,
         currency="INR",
@@ -164,14 +170,42 @@ def approve_order_draft(
     if draft_total == Decimal("0.00") and accumulated_total > Decimal("0.00"):
         order.total_amount = accumulated_total
 
+    draft_id = draft.id
+
+    # Persist the order and its line items. The stock reservation below runs as a
+    # separate, all-or-nothing transaction: a multi-line order either reserves
+    # every line or none of them (Invariant B4).
     db.commit()
 
-    # 4. Initiate FEFO stock reservation upon draft approval (Requirement R3)
+    # 4. Initiate FEFO stock reservation upon draft approval (Requirement R3).
+    #    An order that cannot be reserved stays in 'open' status and awaits
+    #    fulfilment. The outcome is never silent: it is reported in the response
+    #    and recorded in the audit log.
+    reservation_status = "reserved"
+    reservation_message = f"Stock reserved for order {order_num}."
     try:
         reserve_order(db=db, order_id=order.id, actor_id=current_user.id)
-    except AppError:
-        # If warehouse inventory is insufficient, the order remains in 'open' status
-        pass
+    except AppError as exc:
+        reservation_status = "not_reserved"
+        reservation_message = (
+            f"Order {order_num} was created but stock could not be reserved: "
+            f"{exc.message} The order stays in 'pending' status until stock is available."
+        )
+        log_action(
+            db,
+            actor_id=current_user.id,
+            action="APPROVE_DRAFT_RESERVATION_FAILED",
+            entity="order_drafts",
+            entity_id=draft_id,
+            before={"status": "draft"},
+            after={
+                "status": "approved",
+                "reservation_status": reservation_status,
+                "error_code": exc.code,
+                "reason": exc.message,
+            },
+        )
+        db.commit()
 
     db.refresh(order)
 
@@ -180,6 +214,8 @@ def approve_order_draft(
         status="approved",
         message=f"Order {order_num} has been successfully submitted and placed.",
         order_id=order.id,
+        reservation_status=reservation_status,
+        reservation_message=reservation_message,
     )
 
 

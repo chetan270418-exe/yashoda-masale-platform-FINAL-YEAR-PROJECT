@@ -77,3 +77,42 @@ def test_settings_allows_dev_secret_in_local():
 
     s = Settings(environment="local", jwt_secret="dev-secret-change-in-production-key-32")
     assert s.jwt_secret == "dev-secret-change-in-production-key-32"
+
+
+def test_health_live_probe():
+    r = client.get("/api/v1/health/live")
+    assert r.status_code == 200
+    assert r.json()["status"] == "alive"
+    assert "timestamp" in r.json()
+
+
+def test_health_ready_probe():
+    r = client.get("/api/v1/health/ready")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ready"
+    assert r.json()["database"] == "connected"
+
+
+def test_health_ready_probe_fails_when_db_down():
+    class BrokenSession:
+        def execute(self, *_args, **_kwargs):
+            raise OperationalError("SELECT 1", {}, Exception("down"))
+
+    app.dependency_overrides[get_db] = lambda: BrokenSession()
+    try:
+        r = client.get("/api/v1/health/ready")
+    finally:
+        app.dependency_overrides.clear()
+    assert r.status_code == 503
+    assert r.json()["code"] == "DB_UNAVAILABLE"
+
+
+def test_health_detailed_metrics():
+    r = client.get("/api/v1/health/detailed")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["status"] == "ok"
+    assert body["database"] == "up"
+    assert "uptime_seconds" in body
+    assert "system" in body
+    assert "python_version" in body["system"]

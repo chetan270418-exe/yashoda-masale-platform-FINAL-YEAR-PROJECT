@@ -153,45 +153,63 @@ Validate all arguments on the server. Run with the user's permissions. Log each 
 4. Create a DRAFT with reasons.
 5. Dealer reviews, edits, approves. Only then does the normal order endpoint run.
 
-## 13. API list (from the report)
-`/auth/login`, `/auth/me`, `/products`, `/production-plans`, `/batches`, `/batches/{id}/quality-checks`, `/inventory`, `/inventory/expiring`, `/inventory/movements`, `/orders`, `/orders/{id}`, `/orders/{id}/cancel`, `/orders/{id}/reserve`, `/orders/{id}/dispatch`, `/traceability/{public_token}`, `/analytics/sales`, `/analytics/slow-moving`, `/ai/forecasts/run`, `/ai/chat`, `/ai/business-query`, `/ai/reorder-drafts`, `/ai/reorder-drafts/{id}/approve`. All under `/api/v1`.
+## 13. API list
+
+All routes live under `/api/v1` and are namespaced by module, so the module a
+route belongs to is visible in the path.
+
+| Module | Routes |
+|---|---|
+| Auth | `/auth/login`, `/auth/me`, `/auth/register`, `/auth/staff` |
+| Catalog | `/categories`, `/products`, `/products/{id}/variants`, `/products/variants/{id}/prices/{list}` |
+| Procurement | `/procurement/suppliers`, `/procurement/raw-materials`, `/procurement/receipts`, `/procurement/lots` |
+| Production | `/production/plans`, `/production/batches`, `/production/batches/{id}/transition`, `/production/batches/{id}/quantity`, `/production/batches/{id}/release`, `/production/batches/{id}/quality-checks`, `/production/batches/{id}/quality-decisions`, `/production/quality-parameters` |
+| Inventory | `/inventory`, `/inventory/expiring`, `/inventory/low-stock`, `/inventory/movements`, `/inventory/adjustments` |
+| Orders | `/orders`, `/orders/{id}`, `/orders/{id}/reserve`, `/orders/{id}/pack`, `/orders/{id}/dispatch`, `/orders/{id}/cancel`, `/orders/{id}/return`, `/orders/{id}/deliver` |
+| Traceability | `/traceability/{public_token}` (public), `/traceability/batches/{id}/events`, `/traceability/batches/{id}/token`, `/traceability/scans` |
+| Analytics | `/analytics/sales-summary`, `/analytics/sales-summary.csv`, `/analytics/slow-movers` |
+| AI | `/ai/chat`, `/ai/agent/query`, `/ai/forecasts`, `/ai/recommendations/reorder`, `/ai/drafts/{id}/approve`, `/ai/tool-runs` |
+
+The report's original flat list (`/production-plans`, `/batches`, `/analytics/sales`)
+was namespaced during implementation so that every route carries its module, the
+same convention the other modules already used.
 
 ## 14. Prompt templates for coding tools
 
 **Start of every session**
 ```
-Read docs/rules.md and docs/memory.md. Then read task T-0XX in docs/task.md.
+Read spec-pack/rules.md and spec-pack/memory.md. Then read task T-0XX in spec-pack/task.md.
 Give a short plan first. Do only this task. Follow all business invariants B1-B12.
 Write tests in the same change. List files you will change.
 ```
 
 **Backend module**
 ```
-Implement the <module> module following docs/architecture.md (router, schemas, service, repository, models).
-Use the tables in docs/implementation.md section 2. Add Alembic migration and pytest tests.
+Implement the <module> module following spec-pack/architecture.md (router, schemas, service, repository, models).
+Use the tables in spec-pack/implementation.md section 2. Add Alembic migration and pytest tests.
 Enforce role and record-level permissions. Do not change other modules.
 ```
 
 **FEFO and reservation**
 ```
-Implement FEFO selection and transactional reservation as in implementation.md section 5.
+Implement FEFO selection and transactional reservation as in spec-pack/implementation.md section 5.
 Write tests: earliest expiry first, held/expired excluded, insufficient stock, two concurrent reservations for the last unit, cancel releases exactly once.
 ```
 
 **Frontend page**
 ```
-Build the <page> page for role <role> using design tokens from docs/design.md.
+Build the <page> page for role <role> using design tokens from spec-pack/design.md.
 Use these API endpoints: <list>. Handle loading, empty, error and no-permission states.
 Do not hard-code colours. TypeScript strict.
 ```
 
 **AI feature**
 ```
-Implement <feature> following rules.md section 8. Model never writes SQL. Use whitelisted tools.
+Implement <feature> following spec-pack/rules.md section 8. Model never writes SQL. Use whitelisted tools.
 Add tests for: no-source refusal, permission checks, draft-not-submitted-without-approval, prompt-injection attempt.
 ```
 
 **Review prompt (run before merging)**
 ```
-Review this diff against docs/rules.md. List any violation of B1-B12, security rules, missing tests, or missing states. Do not rewrite the code, only report.
+Review this diff against spec-pack/rules.md. List any violation of B1-B12, security rules, missing tests, or missing states. Do not rewrite the code, only report.
 ```

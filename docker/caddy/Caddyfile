@@ -1,0 +1,30 @@
+# Caddy Reverse Proxy Configuration for Staging (Milestone M9 / T-090)
+{$STAGING_DOMAIN:localhost} {
+    encode gzip zstd
+
+    # Health check passthrough
+    handle /api/v1/health/* {
+        reverse_proxy api:8000
+    }
+
+    # API Endpoints
+    handle /api/* {
+        reverse_proxy api:8000
+    }
+
+    # Root / OpenAPI documentation
+    handle /docs* {
+        reverse_proxy api:8000
+    }
+    handle /openapi.json {
+        reverse_proxy api:8000
+    }
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+}

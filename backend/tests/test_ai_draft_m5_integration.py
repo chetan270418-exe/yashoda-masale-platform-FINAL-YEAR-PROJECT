@@ -32,15 +32,11 @@ from tests.conftest import _make_user
 
 
 def _auth_header(user: User) -> dict[str, str]:
-    token = create_access_token(
-        {"sub": str(user.id), "role": user.role.name if user.role else ""}
-    )
+    token = create_access_token({"sub": str(user.id), "role": user.role.name if user.role else ""})
     return {"Authorization": f"Bearer {token}"}
 
 
-def test_ai_draft_approval_creates_m5_order_with_snapshots(
-    client: TestClient, db: Session
-):
+def test_ai_draft_approval_creates_m5_order_with_snapshots(client: TestClient, db: Session):
     """Approving an AI draft creates a complete M5 order with price snapshots and idempotency."""
     dealer = _make_user(
         db, email=f"dealer-draft-m5-{uuid.uuid4().hex[:6]}@test.com", role_name="dealer"
@@ -54,9 +50,7 @@ def test_ai_draft_approval_creates_m5_order_with_snapshots(
     db.add(prod)
     db.flush()
 
-    var = ProductVariant(
-        product_id=prod.id, sku=f"SKU-M5-{uuid.uuid4().hex[:6]}", pack_size_g=500
-    )
+    var = ProductVariant(product_id=prod.id, sku=f"SKU-M5-{uuid.uuid4().hex[:6]}", pack_size_g=500)
     db.add(var)
     db.flush()
 
@@ -78,9 +72,7 @@ def test_ai_draft_approval_creates_m5_order_with_snapshots(
     db.add(draft)
     db.commit()
 
-    resp = client.post(
-        f"/api/v1/ai/drafts/{draft.id}/approve", headers=_auth_header(dealer)
-    )
+    resp = client.post(f"/api/v1/ai/drafts/{draft.id}/approve", headers=_auth_header(dealer))
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "approved"
@@ -97,9 +89,7 @@ def test_ai_draft_approval_creates_m5_order_with_snapshots(
     assert order.currency == "INR"
 
     # Inspect OrderItem snapshots (B8, B12)
-    items = list(
-        db.scalars(select(OrderItem).where(OrderItem.order_id == order.id)).all()
-    )
+    items = list(db.scalars(select(OrderItem).where(OrderItem.order_id == order.id)).all())
     assert len(items) == 1
     assert items[0].variant_id == var.id
     assert items[0].quantity == Decimal("20.000")
@@ -108,9 +98,7 @@ def test_ai_draft_approval_creates_m5_order_with_snapshots(
     assert items[0].line_total == Decimal("2400.00")
 
 
-def test_ai_draft_approval_triggers_fefo_stock_reservation(
-    client: TestClient, db: Session
-):
+def test_ai_draft_approval_triggers_fefo_stock_reservation(client: TestClient, db: Session):
     """Approving an AI draft automatically triggers FEFO reservation when stock is present."""
     dealer = _make_user(
         db, email=f"dealer-fefo-{uuid.uuid4().hex[:6]}@test.com", role_name="dealer"
@@ -178,9 +166,7 @@ def test_ai_draft_approval_triggers_fefo_stock_reservation(
     db.commit()
 
     # Approve draft
-    resp = client.post(
-        f"/api/v1/ai/drafts/{draft.id}/approve", headers=_auth_header(dealer)
-    )
+    resp = client.post(f"/api/v1/ai/drafts/{draft.id}/approve", headers=_auth_header(dealer))
     assert resp.status_code == 200
     order_id = uuid.UUID(resp.json()["order_id"])
 
@@ -191,9 +177,7 @@ def test_ai_draft_approval_triggers_fefo_stock_reservation(
 
     # Verify StockReservation was created
     item = db.scalar(select(OrderItem).where(OrderItem.order_id == order.id))
-    res = db.scalar(
-        select(StockReservation).where(StockReservation.order_item_id == item.id)
-    )
+    res = db.scalar(select(StockReservation).where(StockReservation.order_item_id == item.id))
     assert res is not None
     assert res.quantity == Decimal("15.000")
     assert res.status == "active"

@@ -825,9 +825,9 @@ def test_rbac_customer_cancellation_isolation_and_packed_restrictions(
         json={"reason": "Attempting late cancel after pack"},
         headers=_auth_header(cust_a),
     )
-    assert r_cust_a_packed.status_code == 403, (
-        f"Customer cancelling packed order must return 403, got {r_cust_a_packed.status_code}"
-    )
+    assert (
+        r_cust_a_packed.status_code == 403
+    ), f"Customer cancelling packed order must return 403, got {r_cust_a_packed.status_code}"
     assert "packed" in r_cust_a_packed.json()["message"].lower()
 
     # 4. Warehouse staff CAN cancel the packed order
@@ -836,9 +836,9 @@ def test_rbac_customer_cancellation_isolation_and_packed_restrictions(
         json={"reason": "Warehouse damaged box during packaging"},
         headers=wh_headers,
     )
-    assert r_wh_cancel_packed.status_code == 200, (
-        f"Warehouse staff should cancel packed order, got {r_wh_cancel_packed.status_code}"
-    )
+    assert (
+        r_wh_cancel_packed.status_code == 200
+    ), f"Warehouse staff should cancel packed order, got {r_wh_cancel_packed.status_code}"
     assert r_wh_cancel_packed.json()["status"] == "cancelled"
 
     # Verify reservations were released via Invariant B6

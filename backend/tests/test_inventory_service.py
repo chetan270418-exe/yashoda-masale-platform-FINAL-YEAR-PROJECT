@@ -153,15 +153,15 @@ def _create_batch_and_balance(
 def test_b1_unreleased_batches_cannot_be_reserved(
     db: Session, warehouse: Warehouse, variant: ProductVariant, order_item: OrderItem
 ):
-    """Invariant B1: batches in 'hold', 'rejected', or 'recalled' cannot be reserved."""
-    # Batch in 'hold' status
+    """Invariant B1: batches in 'on_hold' or 'rejected' cannot be reserved."""
+    # Batch in 'on_hold' status
     _create_batch_and_balance(
         db,
         warehouse,
         variant,
         batch_code="B-HOLD",
         days_to_expiry=30,
-        status="hold",
+        status="on_hold",
         on_hand=Decimal("50.000"),
     )
     # Batch in 'rejected' status
@@ -174,14 +174,14 @@ def test_b1_unreleased_batches_cannot_be_reserved(
         status="rejected",
         on_hand=Decimal("50.000"),
     )
-    # Batch in 'recalled' status
+    # Batch in 'on_hold' status
     _create_batch_and_balance(
         db,
         warehouse,
         variant,
         batch_code="B-REC",
         days_to_expiry=50,
-        status="recalled",
+        status="on_hold",
         on_hand=Decimal("50.000"),
     )
 
@@ -227,13 +227,13 @@ def test_b1_dispatch_blocked_if_batch_status_changed_from_released(
     res = reservations[0]
 
     # Batch is subsequently placed on hold (e.g. factory quality alert)
-    batch.status = "hold"
+    batch.status = "on_hold"
     db.commit()
 
     # Attempting to dispatch must raise BatchNotReleasedError
     with pytest.raises(BatchNotReleasedError) as exc_info:
         dispatch_reservation(db, reservation_id=res.id)
-    assert "status is 'hold', not 'released'" in str(exc_info.value)
+    assert "status is 'on_hold', not 'released'" in str(exc_info.value)
 
     # Verify reservation remains active and balance is untouched
     db.refresh(res)
@@ -372,7 +372,7 @@ def test_b2_b3_fefo_skips_expired_and_held_batches(
         variant,
         batch_code="B-HELD",
         days_to_expiry=20,
-        status="hold",
+        status="on_hold",
         on_hand=Decimal("100.000"),
     )
     # Valid released batch: expires in 30 days, 20 units

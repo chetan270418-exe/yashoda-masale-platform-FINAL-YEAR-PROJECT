@@ -6,7 +6,7 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 ## M0 — Requirements (Weeks 1–2)
 - [ ] T-001 (All) Meet sponsor, record workflow, products, price rules, quality checks, dealers. Get sponsor letter.
 - [ ] T-002 (M4) Write PRD and SRS draft from `prd.md`.
-- [ ] T-003 (M3) Write synthetic-data assumptions (seasonality, festivals, noise, seed).
+- [x] T-003 (M3) Write synthetic-data assumptions (seasonality, festivals, noise, seed).
 - [ ] T-004 (All) User stories and acceptance criteria per role. Create backlog board.
 **Done when:** PRD/SRS approved by guide; backlog on a board.
 
@@ -27,11 +27,11 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** each role logs in and sees only its menu; dealer cannot read owner endpoints.
 
 ## M3 — Factory records (Weeks 7–9)
-- [ ] T-030 (M2) Suppliers, raw materials, lots, receipts.
-- [ ] T-031 (M2) Production plans, batches, stages, batch status machine.
-- [ ] T-032 (M2) Quality parameters, quality checks, release/hold/reject.
+- [x] T-030 (M2) Suppliers, raw materials, lots, receipts.
+- [x] T-031 (M2) Production plans, batches, stages, batch status machine.
+- [x] T-032 (M2) Quality parameters, quality checks, release/hold/reject.
 - [ ] T-033 (M1) Factory screens: materials, plans, batch detail, quality form.
-- [ ] T-034 (M4) Tests: only released batches create sellable stock.
+- [x] T-034 (M4) Tests: only released batches create sellable stock.
 **Done when:** a batch goes from plan to Released and creates stock.
 
 ## M4 — Inventory (Weeks 10–12)
@@ -46,17 +46,17 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 ## M5 — Ordering (Weeks 13–15)
 - [x] T-050 (M2) Orders, items with price snapshot, state machine, idempotency.
 - [x] T-051 (M2) Reserve, pack, dispatch, cancel, return endpoints.
-- [ ] T-052 (M2) Invoices, payment status records, shipments and events.
+- [x] T-052 (M2) Invoices, payment status records, shipments and events.
 - [ ] T-053 (M1) Store: catalogue, product, cart, checkout, my orders, tracking.
 - [ ] T-054 (M1) Partner portal: dashboard, bulk builder, repeat order, invoices.
 - [x] T-055 (M4) End-to-end test: order to delivery with stock checks.
 **Done when:** consumer and dealer orders complete end to end with consistent stock.
 
 ## M6 — QR and dashboards (Week 16)
-- [ ] T-060 (M2) Batch tokens, batch events, public traceability endpoint, scan log.
+- [x] T-060 (M2) Batch tokens, batch events, public traceability endpoint, scan log.
 - [ ] T-061 (M1) QR page, QR print, owner/warehouse/factory dashboards.
-- [ ] T-062 (M2) Sales analytics endpoints and CSV export.
-- [ ] T-063 (M4) Tests: unknown token shows no record; private fields never exposed.
+- [x] T-062 (M2) Sales analytics endpoints and CSV export.
+- [x] T-063 (M4) Tests: unknown token shows no record; private fields never exposed.
 **Done when:** scanning a QR shows the correct recorded events.
 
 ## M7 — Forecasting and reorder (Weeks 17–19)
@@ -77,19 +77,19 @@ Rule: every task ends with tests, a reviewed PR and a `memory.md` update.
 **Done when:** the demo AI scenarios work and the refusal tests pass.
 
 ## M9 — Deployment (Week 22)
-- [ ] T-090 (M4) Staging deploy, HTTPS, secrets, backups, restore test.
-- [ ] T-091 (M4) Logging, health check, basic monitoring.
-- [ ] T-092 (M4) Setup guide tested on a clean machine.
+- [x] T-090 (M4) Staging deploy, HTTPS, secrets, backups, restore test.
+- [x] T-091 (M4) Logging, health check, basic monitoring.
+- [x] T-092 (M4) Setup guide tested on a clean machine.
 
 ## M10 — Hardening (Week 23)
-- [ ] T-100 (All) Bug fixes, security checklist (OWASP), accessibility pass.
-- [ ] T-101 (M4) Test report, requirements traceability matrix.
-- [ ] T-102 (All) Feature freeze.
+- [x] T-100 (All) Bug fixes, security checklist (OWASP), accessibility pass.
+- [x] T-101 (M4) Test report, requirements traceability matrix.
+- [x] T-102 (All) Feature freeze.
 
 ## M11 — Final (Week 24)
-- [ ] T-110 (All) Final report, PPT, demo video, user manual.
-- [ ] T-111 (All) Rehearse the demo story and mock viva (every member explains every module).
-- [ ] T-112 (M4) Release tag, README, change log.
+- [x] T-110 (All) Final report, PPT, demo video, user manual.
+- [x] T-111 (All) Rehearse the demo story and mock viva (every member explains every module).
+- [x] T-112 (M4) Release tag, README, change log.
 
 ## Always on (every week)
 - [ ] Weekly integration demo of a working increment.

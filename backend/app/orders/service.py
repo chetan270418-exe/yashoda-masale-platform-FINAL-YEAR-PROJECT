@@ -15,7 +15,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING
 
-from sqlalchemy import select, text
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 
@@ -25,13 +25,11 @@ from app.catalog import repository as catalog_repo
 from app.catalog.models import PriceListItem
 from app.catalog.service import resolve_price_list_name_for_role
 from app.core.errors import AppError
-from app.orders.models import Order, OrderItem
+from app.orders.models import Invoice, Order, OrderItem, Shipment, ShipmentEvent
 from app.orders.schemas import OrderCreate
 
 if TYPE_CHECKING:
     from app.inventory.models import Warehouse
-
-
 
 
 class OrderStatus(str, Enum):
@@ -44,12 +42,10 @@ class OrderStatus(str, Enum):
     DELIVERED = "delivered"
     CANCELLED = "cancelled"
     RETURNED = "returned"
-    OPEN = "open"  # Legacy compatibility alias for pending
 
 
 ALLOWED_TRANSITIONS: dict[str, set[str]] = {
     OrderStatus.PENDING.value: {OrderStatus.RESERVED.value, OrderStatus.CANCELLED.value},
-    OrderStatus.OPEN.value: {OrderStatus.RESERVED.value, OrderStatus.CANCELLED.value},
     OrderStatus.RESERVED.value: {OrderStatus.PACKED.value, OrderStatus.CANCELLED.value},
     OrderStatus.PACKED.value: {OrderStatus.DISPATCHED.value, OrderStatus.CANCELLED.value},
     OrderStatus.DISPATCHED.value: {OrderStatus.DELIVERED.value},
@@ -99,15 +95,15 @@ def _payload_matches(order: Order, customer_id: uuid.UUID, data: OrderCreate) ->
 
     incoming_quantities: dict[uuid.UUID, Decimal] = {}
     for item in data.items:
-        incoming_quantities[item.variant_id] = (
-            incoming_quantities.get(item.variant_id, Decimal("0")) + Decimal(str(item.quantity))
-        )
+        incoming_quantities[item.variant_id] = incoming_quantities.get(
+            item.variant_id, Decimal("0")
+        ) + Decimal(str(item.quantity))
 
     existing_quantities: dict[uuid.UUID, Decimal] = {}
     for item in order.items:
-        existing_quantities[item.variant_id] = (
-            existing_quantities.get(item.variant_id, Decimal("0")) + Decimal(str(item.quantity))
-        )
+        existing_quantities[item.variant_id] = existing_quantities.get(
+            item.variant_id, Decimal("0")
+        ) + Decimal(str(item.quantity))
 
     return incoming_quantities == existing_quantities
 
@@ -139,13 +135,20 @@ def create_order(
     key = idempotency_key or getattr(payload, "idempotency_key", None)
     key = key.strip() if key and key.strip() else None
 
-    # 1. Check idempotency key if provided
+    # 1. Check idempotency key if provided (scoped per customer)
     if key:
-        existing = db.scalars(
-            select(Order)
-            .options(joinedload(Order.items))
-            .where(Order.idempotency_key == key)
-        ).unique().first()
+        existing = (
+            db.scalars(
+                select(Order)
+                .options(joinedload(Order.items))
+                .where(
+                    Order.customer_id == user.id,
+                    Order.idempotency_key == key,
+                )
+            )
+            .unique()
+            .first()
+        )
 
         if existing:
             if _payload_matches(existing, user.id, payload):
@@ -158,6 +161,9 @@ def create_order(
 
     if not payload.items:
         raise AppError("EMPTY_ORDER", "Order must contain at least one item.", 400)
+
+    if len(payload.items) > 50:
+        raise AppError("TOO_MANY_ITEMS", "An order can contain at most 50 items.", 400)
 
     # 2. Resolve price list by user role (B9)
     role_name = user.role.name if user.role else None
@@ -182,6 +188,12 @@ def create_order(
                 f"Quantity for variant '{item.variant_id}' must be greater than zero.",
                 400,
             )
+        if qty > Decimal("10000"):
+            raise AppError(
+                "QUANTITY_TOO_LARGE",
+                f"Quantity for variant '{item.variant_id}' cannot exceed 10,000.",
+                400,
+            )
 
         variant = catalog_repo.get_variant_by_id(db, item.variant_id)
         if not variant:
@@ -190,9 +202,6 @@ def create_order(
         if not variant.is_active or not variant.product.is_active:
             raise AppError("VARIANT_INACTIVE", f"Variant '{variant.sku}' is inactive.", 400)
 
-        order_clauses = [PriceListItem.valid_from.desc()]
-        if db.bind and db.bind.dialect.name == "sqlite":
-            order_clauses.append(text("rowid DESC"))
         price_stmt = (
             select(PriceListItem.price)
             .where(
@@ -200,7 +209,7 @@ def create_order(
                 PriceListItem.variant_id == variant.id,
                 PriceListItem.valid_from <= datetime.now(UTC),
             )
-            .order_by(*order_clauses)
+            .order_by(PriceListItem.valid_from.desc(), PriceListItem.id.desc())
             .limit(1)
         )
         price = db.scalars(price_stmt).first()
@@ -234,7 +243,7 @@ def create_order(
         id=order_id,
         order_number=order_number,
         customer_id=user.id,
-        order_type=getattr(payload, "order_type", "standard"),
+        order_type=getattr(payload, "order_type", "sales") or "sales",
         status=OrderStatus.PENDING.value,
         idempotency_key=key,
         total_amount=total_amount.quantize(Decimal("0.01")),
@@ -252,11 +261,18 @@ def create_order(
     except IntegrityError as exc:
         db.rollback()
         if key:
-            existing = db.scalars(
-                select(Order)
-                .options(joinedload(Order.items))
-                .where(Order.idempotency_key == key)
-            ).unique().first()
+            existing = (
+                db.scalars(
+                    select(Order)
+                    .options(joinedload(Order.items))
+                    .where(
+                        Order.customer_id == user.id,
+                        Order.idempotency_key == key,
+                    )
+                )
+                .unique()
+                .first()
+            )
             if existing:
                 if _payload_matches(existing, user.id, payload):
                     return (existing, True)
@@ -270,11 +286,11 @@ def create_order(
 
 def get_order_by_id(db: Session, order_id: uuid.UUID) -> Order | None:
     """Retrieve an order with loaded order items."""
-    return db.scalars(
-        select(Order)
-        .options(joinedload(Order.items))
-        .where(Order.id == order_id)
-    ).unique().first()
+    return (
+        db.scalars(select(Order).options(joinedload(Order.items)).where(Order.id == order_id))
+        .unique()
+        .first()
+    )
 
 
 def list_orders(
@@ -299,11 +315,10 @@ def update_order_status(
     order_id: uuid.UUID,
     target_status: str,
     actor_id: uuid.UUID | None = None,
+    commit: bool = True,
 ) -> Order:
     """Transition an order to a new state enforcing the lifecycle state machine."""
-    order = db.scalars(
-        select(Order).where(Order.id == order_id)
-    ).first()
+    order = db.scalars(select(Order).where(Order.id == order_id).with_for_update(of=Order)).first()
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_id}' not found.", 404)
 
@@ -321,7 +336,10 @@ def update_order_status(
             after={"status": order.status},
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
@@ -374,9 +392,7 @@ def resolve_target_warehouse(
 
     # 3. First active warehouse
     wh = db.scalar(
-        select(Warehouse)
-        .where(Warehouse.is_active.is_(True))
-        .order_by(Warehouse.created_at.asc())
+        select(Warehouse).where(Warehouse.is_active.is_(True)).order_by(Warehouse.created_at.asc())
     )
     if wh:
         return wh
@@ -393,34 +409,45 @@ def reserve_order(
     order_id: uuid.UUID | str,
     warehouse_id: uuid.UUID | str | None = None,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> Order:
     """Reserve inventory for an order using FEFO batch selection (Invariants B1, B2, B3, B4).
 
-    - Validates order status is 'pending' or 'open'.
+    - Locks the Order row (FOR UPDATE OF orders) to serialize concurrent fulfillment.
+    - Validates order status is 'pending'.
     - Resolves target warehouse.
     - Reserves stock for each order line item via inventory_service.reserve_stock_fefo.
-    - Provides multi-item atomicity rollback: cleans up partial reservations if any line item fails.
+    - Every line item is allocated inside ONE transaction. If any line fails, the
+      whole reservation is rolled back, so no partial reservation can survive
+      (Invariant B4). No compensating cancels are used.
     - Transitions order status to 'reserved'.
+
+    When ``commit=False`` the caller owns the transaction and must commit or roll
+    it back. This lets an order and its stock reservation be persisted atomically
+    together, for example when an AI order draft is approved.
     """
     from app.inventory import service as inventory_service
-    from app.inventory.models import StockReservation
 
     order_uuid = uuid.UUID(str(order_id))
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
 
-
-    order = db.scalars(
-        select(Order)
-        .options(joinedload(Order.items))
-        .where(Order.id == order_uuid)
-    ).unique().first()
+    order = (
+        db.scalars(
+            select(Order)
+            .options(joinedload(Order.items))
+            .where(Order.id == order_uuid)
+            .with_for_update(of=Order)
+        )
+        .unique()
+        .first()
+    )
 
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
     # Validate state transition
     normalized_status = order.status.strip().lower()
-    if normalized_status not in (OrderStatus.PENDING.value, OrderStatus.OPEN.value):
+    if normalized_status != OrderStatus.PENDING.value:
         validate_transition(normalized_status, OrderStatus.RESERVED.value)
 
     if not order.items:
@@ -430,28 +457,28 @@ def reserve_order(
 
     target_wh = resolve_target_warehouse(db, warehouse_id=warehouse_id)
 
-    # Multi-item FEFO allocation with automatic rollback cleanup on partial failure
-    allocated_reservations: list[StockReservation] = []
+    # Multi-item FEFO allocation inside ONE transaction.
+    # Each line item only flushes its allocations; the commit happens once, after
+    # every item has succeeded. If any item fails the whole transaction is rolled
+    # back, so a partial reservation can never survive (Invariant B4).
+    #
+    # Lock ordering: line items are processed in variant_id order, and each item
+    # locks its balances by (expiry_date, id) inside reserve_stock_fefo. That
+    # gives every concurrent reservation the same global lock order, so two
+    # orders touching the same variants in opposite line order cannot deadlock.
     try:
-        for item in order.items:
-            reservations = inventory_service.reserve_stock_fefo(
+        for item in sorted(order.items, key=lambda it: it.variant_id):
+            inventory_service.reserve_stock_fefo(
                 db=db,
                 warehouse_id=target_wh.id,
                 variant_id=item.variant_id,
                 requested_qty=item.quantity,
                 order_item_id=item.id,
                 actor_id=actor_uuid,
+                commit=False,
             )
-            allocated_reservations.extend(reservations)
     except Exception:
-        # Rollback partial allocations so order reservation is strictly atomic across all items
-        for res in allocated_reservations:
-            try:
-                inventory_service.cancel_reservation(
-                    db=db, reservation_id=res.id, actor_id=actor_uuid
-                )
-            except Exception:
-                pass
+        db.rollback()
         raise
 
     old_status = order.status
@@ -468,7 +495,10 @@ def reserve_order(
             after={"status": OrderStatus.RESERVED.value, "warehouse_id": str(target_wh.id)},
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
@@ -477,13 +507,15 @@ def pack_order(
     db: Session,
     order_id: uuid.UUID | str,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> Order:
     """Transition order status from 'reserved' to 'packed'."""
     order_uuid = uuid.UUID(str(order_id))
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
 
-
-    order = db.scalars(select(Order).where(Order.id == order_uuid)).first()
+    order = db.scalars(
+        select(Order).where(Order.id == order_uuid).with_for_update(of=Order)
+    ).first()
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
@@ -503,7 +535,10 @@ def pack_order(
             after={"status": OrderStatus.PACKED.value},
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
@@ -514,6 +549,7 @@ def dispatch_order(
     carrier: str | None = None,
     tracking_ref: str | None = None,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> Order:
     """Dispatch packed order, decrement on_hand & reserved,
     and record stock_movements ledger (B5).
@@ -524,8 +560,9 @@ def dispatch_order(
     order_uuid = uuid.UUID(str(order_id))
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
 
-
-    order = db.scalars(select(Order).where(Order.id == order_uuid)).first()
+    order = db.scalars(
+        select(Order).where(Order.id == order_uuid).with_for_update(of=Order)
+    ).first()
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
@@ -554,10 +591,47 @@ def dispatch_order(
             db=db,
             reservation_id=res.id,
             actor_id=actor_uuid,
+            commit=False,
         )
 
     old_status = order.status
     order.status = OrderStatus.DISPATCHED.value
+
+    # Auto-generate Invoice on dispatch if not yet issued (Milestone M5 / T-052)
+    existing_inv = db.scalar(select(Invoice).where(Invoice.order_id == order_uuid))
+    if not existing_inv:
+        auto_inv = Invoice(
+            id=uuid.uuid4(),
+            order_id=order_uuid,
+            customer_id=order.customer_id,
+            invoice_number=generate_invoice_number(),
+            total_amount=order.total_amount,
+            currency=order.currency,
+            payment_status="unpaid",
+            notes="Auto-generated on order dispatch",
+        )
+        db.add(auto_inv)
+
+    # Auto-create Shipment if carrier provided
+    if carrier:
+        shipment = Shipment(
+            id=uuid.uuid4(),
+            order_id=order_uuid,
+            shipment_number=generate_shipment_number(),
+            carrier=carrier,
+            tracking_ref=tracking_ref,
+            status="in_transit",
+            dispatched_at=datetime.now(UTC),
+        )
+        db.add(shipment)
+        event = ShipmentEvent(
+            id=uuid.uuid4(),
+            shipment_id=shipment.id,
+            event_type="dispatched",
+            description=f"Consignment dispatched via {carrier}. Tracking: {tracking_ref or 'N/A'}",
+            location="Warehouse Facility",
+        )
+        db.add(event)
 
     if actor_uuid:
         log_action(
@@ -574,7 +648,10 @@ def dispatch_order(
             },
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
@@ -586,6 +663,7 @@ def cancel_order(
     actor_id: uuid.UUID | str | None = None,
     is_staff: bool = False,
     customer_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> Order:
     """Cancel order, release active reservations exactly once via CAS,
     and record stock_movements (B6).
@@ -597,8 +675,9 @@ def cancel_order(
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
     cust_uuid = uuid.UUID(str(customer_id)) if customer_id else None
 
-
-    order = db.scalars(select(Order).where(Order.id == order_uuid)).first()
+    order = db.scalars(
+        select(Order).where(Order.id == order_uuid).with_for_update(of=Order)
+    ).first()
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
@@ -651,6 +730,7 @@ def cancel_order(
             db=db,
             reservation_id=res.id,
             actor_id=actor_uuid,
+            commit=False,
         )
 
     old_status = order.status
@@ -667,7 +747,10 @@ def cancel_order(
             after={"status": OrderStatus.CANCELLED.value, "reason": reason},
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
@@ -677,6 +760,7 @@ def return_order(
     order_id: uuid.UUID | str,
     reason: str,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> Order:
     """Mark order as returned. Quarantines returned goods without
     modifying sellable stock balances (B7).
@@ -684,8 +768,9 @@ def return_order(
     order_uuid = uuid.UUID(str(order_id))
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
 
-
-    order = db.scalars(select(Order).where(Order.id == order_uuid)).first()
+    order = db.scalars(
+        select(Order).where(Order.id == order_uuid).with_for_update(of=Order)
+    ).first()
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
@@ -709,7 +794,359 @@ def return_order(
             after={"status": OrderStatus.RETURNED.value, "reason": reason.strip()},
         )
 
-    db.commit()
+    if commit:
+        db.commit()
+    else:
+        db.flush()
     db.refresh(order)
     return order
 
+
+# -----------------------------------------------------------------------------
+# Milestone M5 / T-052: Invoices and Shipments Service Methods
+# -----------------------------------------------------------------------------
+
+
+def generate_invoice_number() -> str:
+    """Generate unique human-readable invoice code."""
+    ts = datetime.now(UTC).strftime("%Y%m%d")
+    unique_suffix = uuid.uuid4().hex[:8].upper()
+    return f"INV-{ts}-{unique_suffix}"
+
+
+def generate_shipment_number() -> str:
+    """Generate unique human-readable shipment consignment code."""
+    ts = datetime.now(UTC).strftime("%Y%m%d")
+    unique_suffix = uuid.uuid4().hex[:8].upper()
+    return f"SHP-{ts}-{unique_suffix}"
+
+
+def create_invoice_for_order(
+    db: Session,
+    order_id: uuid.UUID | str,
+    notes: str | None = None,
+    actor_id: uuid.UUID | str | None = None,
+) -> Invoice:
+    """Issue a billing invoice for an existing order (Milestone M5 / T-052)."""
+    order_uuid = uuid.UUID(str(order_id))
+    actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
+
+    order = db.scalar(select(Order).where(Order.id == order_uuid))
+    if not order:
+        raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
+
+    existing = db.scalar(select(Invoice).where(Invoice.order_id == order_uuid))
+    if existing:
+        return existing
+
+    invoice = Invoice(
+        id=uuid.uuid4(),
+        order_id=order.id,
+        customer_id=order.customer_id,
+        invoice_number=generate_invoice_number(),
+        total_amount=order.total_amount,
+        currency=order.currency,
+        payment_status="unpaid",
+        notes=notes,
+    )
+    db.add(invoice)
+
+    if actor_uuid:
+        log_action(
+            db,
+            actor_id=actor_uuid,
+            action="CREATE_INVOICE",
+            entity="invoices",
+            entity_id=invoice.id,
+            before=None,
+            after={
+                "invoice_number": invoice.invoice_number,
+                "order_id": str(order.id),
+                "total_amount": str(invoice.total_amount),
+            },
+        )
+
+    db.commit()
+    db.refresh(invoice)
+    return invoice
+
+
+def record_invoice_payment(
+    db: Session,
+    invoice_id: uuid.UUID | str,
+    amount: Decimal | int | float,
+    payment_method: str = "simulated_upi",
+    reference: str | None = None,
+    notes: str | None = None,
+    actor_id: uuid.UUID | str | None = None,
+) -> Invoice:
+    """Record a payment for an invoice.
+
+    Payments are simulated; card data is never accepted or stored (Rule 91, D-009).
+    """
+    inv_uuid = uuid.UUID(str(invoice_id))
+    actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
+    pay_amount = Decimal(str(amount)).quantize(Decimal("0.01"))
+
+    invoice = db.scalar(select(Invoice).where(Invoice.id == inv_uuid).with_for_update())
+    if not invoice:
+        raise AppError("INVOICE_NOT_FOUND", f"Invoice '{inv_uuid}' was not found.", 404)
+
+    if invoice.payment_status == "paid":
+        raise AppError("ALREADY_PAID", f"Invoice '{invoice.invoice_number}' is already paid.", 400)
+
+    if pay_amount < invoice.total_amount:
+        raise AppError(
+            "INSUFFICIENT_PAYMENT",
+            f"Payment of {pay_amount} is less than invoice total {invoice.total_amount}.",
+            400,
+        )
+
+    old_status = invoice.payment_status
+    invoice.payment_status = "paid"
+    invoice.payment_method = payment_method
+    invoice.payment_reference = reference or f"SIM-PAY-{uuid.uuid4().hex[:8].upper()}"
+    invoice.paid_at = datetime.now(UTC)
+    if notes:
+        invoice.notes = f"{invoice.notes or ''}; {notes}".strip("; ")
+
+    if actor_uuid:
+        log_action(
+            db,
+            actor_id=actor_uuid,
+            action="RECORD_PAYMENT",
+            entity="invoices",
+            entity_id=invoice.id,
+            before={"payment_status": old_status},
+            after={
+                "payment_status": "paid",
+                "payment_method": invoice.payment_method,
+                "payment_reference": invoice.payment_reference,
+                "amount": str(pay_amount),
+            },
+        )
+
+    db.commit()
+    db.refresh(invoice)
+    return invoice
+
+
+def get_invoice_by_id(db: Session, invoice_id: uuid.UUID | str) -> Invoice | None:
+    """Retrieve an invoice by UUID."""
+    inv_uuid = uuid.UUID(str(invoice_id))
+    return db.scalar(select(Invoice).where(Invoice.id == inv_uuid))
+
+
+def get_invoice_by_order_id(db: Session, order_id: uuid.UUID | str) -> Invoice | None:
+    """Retrieve an invoice by its associated Order UUID."""
+    order_uuid = uuid.UUID(str(order_id))
+    return db.scalar(select(Invoice).where(Invoice.order_id == order_uuid))
+
+
+def list_invoices(
+    db: Session,
+    customer_id: uuid.UUID | None = None,
+    payment_status: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[Invoice]:
+    """List invoices with optional customer ownership and payment status filter."""
+    stmt = select(Invoice)
+    if customer_id is not None:
+        stmt = stmt.where(Invoice.customer_id == customer_id)
+    if payment_status is not None:
+        stmt = stmt.where(Invoice.payment_status == payment_status.strip().lower())
+    stmt = stmt.order_by(Invoice.created_at.desc()).limit(limit).offset(offset)
+    return list(db.scalars(stmt).all())
+
+
+def create_shipment(
+    db: Session,
+    order_id: uuid.UUID | str,
+    carrier: str,
+    tracking_ref: str | None = None,
+    notes: str | None = None,
+    actor_id: uuid.UUID | str | None = None,
+) -> Shipment:
+    """Create a consignment shipment record for an order (Milestone M5 / T-052)."""
+    order_uuid = uuid.UUID(str(order_id))
+    actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
+
+    order = db.scalar(select(Order).where(Order.id == order_uuid))
+    if not order:
+        raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
+
+    shipment = Shipment(
+        id=uuid.uuid4(),
+        order_id=order.id,
+        shipment_number=generate_shipment_number(),
+        carrier=carrier,
+        tracking_ref=tracking_ref,
+        status="manifested",
+        notes=notes,
+    )
+    db.add(shipment)
+    db.flush()
+
+    event = ShipmentEvent(
+        id=uuid.uuid4(),
+        shipment_id=shipment.id,
+        event_type="manifested",
+        description=f"Shipment created with carrier {carrier}",
+        location="Packaging Center",
+    )
+    db.add(event)
+
+    if actor_uuid:
+        log_action(
+            db,
+            actor_id=actor_uuid,
+            action="CREATE_SHIPMENT",
+            entity="shipments",
+            entity_id=shipment.id,
+            before=None,
+            after={
+                "shipment_number": shipment.shipment_number,
+                "carrier": carrier,
+                "tracking_ref": tracking_ref,
+            },
+        )
+
+    db.commit()
+    db.refresh(shipment)
+    return shipment
+
+
+def update_shipment_status(
+    db: Session,
+    shipment_id: uuid.UUID | str,
+    status: str,
+    location: str | None = None,
+    description: str | None = None,
+    actor_id: uuid.UUID | str | None = None,
+) -> Shipment:
+    """Update shipment tracking status and record timeline event."""
+    ship_uuid = uuid.UUID(str(shipment_id))
+    actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
+    target_status = status.strip().lower()
+
+    valid_statuses = {
+        "manifested",
+        "in_transit",
+        "out_for_delivery",
+        "delivered",
+        "failed",
+        "returned",
+    }
+    if target_status not in valid_statuses:
+        raise AppError(
+            "INVALID_SHIPMENT_STATUS",
+            f"Invalid status '{target_status}'. Must be one of: {sorted(valid_statuses)}.",
+            400,
+        )
+
+    shipment = db.scalar(
+        select(Shipment)
+        .options(joinedload(Shipment.events))
+        .where(Shipment.id == ship_uuid)
+        .with_for_update(of=Shipment)
+    )
+    if not shipment:
+        raise AppError("SHIPMENT_NOT_FOUND", f"Shipment '{ship_uuid}' was not found.", 404)
+
+    old_status = shipment.status
+    shipment.status = target_status
+
+    now = datetime.now(UTC)
+    if target_status in ("dispatched", "in_transit") and not shipment.dispatched_at:
+        shipment.dispatched_at = now
+    elif target_status == "delivered":
+        shipment.delivered_at = now
+
+    event_desc = description or f"Shipment marked {target_status}"
+    event = ShipmentEvent(
+        id=uuid.uuid4(),
+        shipment_id=shipment.id,
+        event_type=target_status,
+        description=event_desc,
+        location=location or "Transit Hub",
+    )
+    db.add(event)
+
+    if actor_uuid:
+        log_action(
+            db,
+            actor_id=actor_uuid,
+            action="UPDATE_SHIPMENT_STATUS",
+            entity="shipments",
+            entity_id=shipment.id,
+            before={"status": old_status},
+            after={"status": target_status, "location": location},
+        )
+
+    db.commit()
+    db.refresh(shipment)
+    return shipment
+
+
+def add_shipment_event(
+    db: Session,
+    shipment_id: uuid.UUID | str,
+    event_type: str,
+    description: str,
+    location: str | None = None,
+    actor_id: uuid.UUID | str | None = None,
+) -> ShipmentEvent:
+    """Append a tracking checkpoint event to a shipment timeline."""
+    ship_uuid = uuid.UUID(str(shipment_id))
+    actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
+
+    shipment = db.scalar(select(Shipment).where(Shipment.id == ship_uuid))
+    if not shipment:
+        raise AppError("SHIPMENT_NOT_FOUND", f"Shipment '{ship_uuid}' was not found.", 404)
+
+    event = ShipmentEvent(
+        id=uuid.uuid4(),
+        shipment_id=shipment.id,
+        event_type=event_type.strip().lower(),
+        description=description,
+        location=location,
+    )
+    db.add(event)
+
+    if actor_uuid:
+        log_action(
+            db,
+            actor_id=actor_uuid,
+            action="ADD_SHIPMENT_EVENT",
+            entity="shipment_events",
+            entity_id=event.id,
+            before=None,
+            after={"shipment_id": str(shipment.id), "event_type": event.event_type},
+        )
+
+    db.commit()
+    db.refresh(event)
+    return event
+
+
+def get_shipment_by_id(db: Session, shipment_id: uuid.UUID | str) -> Shipment | None:
+    """Retrieve shipment by UUID with its timeline events."""
+    ship_uuid = uuid.UUID(str(shipment_id))
+    return db.scalar(
+        select(Shipment).options(joinedload(Shipment.events)).where(Shipment.id == ship_uuid)
+    )
+
+
+def get_shipments_by_order_id(db: Session, order_id: uuid.UUID | str) -> list[Shipment]:
+    """Retrieve all shipments created for an order."""
+    order_uuid = uuid.UUID(str(order_id))
+    return list(
+        db.scalars(
+            select(Shipment)
+            .options(joinedload(Shipment.events))
+            .where(Shipment.order_id == order_uuid)
+        )
+        .unique()
+        .all()
+    )

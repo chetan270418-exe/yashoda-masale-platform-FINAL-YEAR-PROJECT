@@ -101,7 +101,7 @@ def test_two_orders_one_unit_left_concurrency(db):
     # Pre-create 10 distinct orders and order items
     order_items = []
     for i in range(10):
-        order = Order(order_number=f"ORD-1U-{i}-{uuid.uuid4().hex[:6]}", status="open")
+        order = Order(order_number=f"ORD-1U-{i}-{uuid.uuid4().hex[:6]}", status="pending")
         db.add(order)
         db.flush()
         oi = OrderItem(order_id=order.id, variant_id=var.id, quantity=Decimal("1.000"))
@@ -254,7 +254,7 @@ def test_parallel_multi_batch_race_concurrency(db):
 
     order_items = []
     for i, qty in enumerate(quantities):
-        order = Order(order_number=f"ORD-MB-{i}-{uuid.uuid4().hex[:6]}", status="open")
+        order = Order(order_number=f"ORD-MB-{i}-{uuid.uuid4().hex[:6]}", status="pending")
         db.add(order)
         db.flush()
         oi = OrderItem(order_id=order.id, variant_id=var.id, quantity=qty)
@@ -367,7 +367,7 @@ def test_atomic_cas_cancel_vs_dispatch_race(db):
     )
     db.add(balance)
 
-    order = Order(order_number=f"ORD-CAS-{uuid.uuid4().hex[:6]}", status="open")
+    order = Order(order_number=f"ORD-CAS-{uuid.uuid4().hex[:6]}", status="pending")
     db.add(order)
     db.flush()
 
@@ -461,7 +461,7 @@ def test_atomic_cas_cancel_vs_dispatch_race(db):
 
 
 def test_held_batch_isolation_concurrency(db):
-    """Concurrent reservation attempts while batch status is transitioned to 'hold'.
+    """Concurrent reservation attempts while batch status is transitioned to 'on_hold'.
 
     Enforces B1 & B2:
     - Batches on hold cannot be reserved.
@@ -491,7 +491,7 @@ def test_held_batch_isolation_concurrency(db):
     # Pre-create 6 orders requesting 2 units each (total 12 units > 10)
     order_items = []
     for i in range(6):
-        order = Order(order_number=f"ORD-HELD-{i}-{uuid.uuid4().hex[:6]}", status="open")
+        order = Order(order_number=f"ORD-HELD-{i}-{uuid.uuid4().hex[:6]}", status="pending")
         db.add(order)
         db.flush()
         oi = OrderItem(order_id=order.id, variant_id=var.id, quantity=Decimal("2.000"))
@@ -532,7 +532,7 @@ def test_held_batch_isolation_concurrency(db):
             # Transition batch to hold
             b = session.scalar(select(ProductionBatch).where(ProductionBatch.id == batch.id))
             if b:
-                b.status = "hold"
+                b.status = "on_hold"
                 session.commit()
         finally:
             session.close()
@@ -555,7 +555,7 @@ def test_held_batch_isolation_concurrency(db):
         final_batch = verify_session.scalar(
             select(ProductionBatch).where(ProductionBatch.id == batch.id)
         )
-        assert final_batch.status == "hold"
+        assert final_batch.status == "on_hold"
 
         final_bal = verify_session.scalar(
             select(InventoryBalance).where(InventoryBalance.id == balance.id)
@@ -563,8 +563,8 @@ def test_held_batch_isolation_concurrency(db):
         assert final_bal.reserved <= final_bal.on_hand
         assert final_bal.reserved <= Decimal("10.000")
 
-        # Now that batch is confirmed 'hold', any further reservation attempt MUST fail
-        extra_order = Order(order_number=f"ORD-AFTER-HOLD-{uuid.uuid4().hex[:6]}", status="open")
+        # Now that batch is confirmed 'on_hold', any further reservation attempt MUST fail
+        extra_order = Order(order_number=f"ORD-AFTER-HOLD-{uuid.uuid4().hex[:6]}", status="pending")
         verify_session.add(extra_order)
         verify_session.flush()
         extra_oi = OrderItem(order_id=extra_order.id, variant_id=var.id, quantity=Decimal("1.000"))

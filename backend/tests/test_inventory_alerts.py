@@ -98,7 +98,7 @@ def _seed_inventory_data(db):
         variant_id=v100.id,
         batch_code="B-TUR-004-HOLD",
         expiry_date=today + timedelta(days=5),
-        status="hold",
+        status="on_hold",
     )
     # Batch 5: Expiring in 15 days, released, on_hand=5, reserved=5 -> avail=0
     b5 = ProductionBatch(
@@ -555,7 +555,7 @@ def test_get_low_stock_alerts_variant_with_only_held_batches_reported_as_out_of_
         variant_id=var.id,
         batch_code=f"B-HELD-{uuid.uuid4().hex[:6]}",
         expiry_date=today + timedelta(days=60),
-        status="hold",
+        status="on_hold",
     )
     db.add(b_held)
     db.flush()

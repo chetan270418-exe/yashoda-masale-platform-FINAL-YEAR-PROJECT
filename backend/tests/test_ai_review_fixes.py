@@ -353,7 +353,7 @@ def test_get_sales_summary_excludes_cancelled_orders(db: Session, owner_user: Us
     _, var = _setup_variant_with_prices(db, mrp=Decimal("100.00"))
 
     # Non-cancelled order
-    active_order = Order(order_number=f"ORD-ACT-{uuid.uuid4().hex[:6]}", status="shipped")
+    active_order = Order(order_number=f"ORD-ACT-{uuid.uuid4().hex[:6]}", status="dispatched")
     db.add(active_order)
     db.flush()
     db.add(OrderItem(order_id=active_order.id, variant_id=var.id, quantity=Decimal("25.000")))
@@ -381,7 +381,7 @@ def test_get_sales_summary_period_filtering(db: Session, owner_user: User):
     # 1. 3 days ago: 10 qty
     o1 = Order(
         order_number=f"ORD-P1-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=3),
     )
     db.add(o1)
@@ -391,7 +391,7 @@ def test_get_sales_summary_period_filtering(db: Session, owner_user: User):
     # 2. 15 days ago: 20 qty
     o2 = Order(
         order_number=f"ORD-P2-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=15),
     )
     db.add(o2)
@@ -401,7 +401,7 @@ def test_get_sales_summary_period_filtering(db: Session, owner_user: User):
     # 3. 60 days ago: 30 qty
     o3 = Order(
         order_number=f"ORD-P3-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=60),
     )
     db.add(o3)
@@ -411,7 +411,7 @@ def test_get_sales_summary_period_filtering(db: Session, owner_user: User):
     # 4. 120 days ago: 40 qty
     o4 = Order(
         order_number=f"ORD-P4-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=120),
     )
     db.add(o4)
@@ -454,7 +454,7 @@ def test_get_sales_summary_group_by_dimensions(db: Session, owner_user: User):
     db.add_all([v1_100g, v1_500g, v2_200g])
     db.flush()
 
-    order = Order(order_number=f"ORD-GRP-{uuid.uuid4().hex[:6]}", status="shipped")
+    order = Order(order_number=f"ORD-GRP-{uuid.uuid4().hex[:6]}", status="dispatched")
     db.add(order)
     db.flush()
 
@@ -514,7 +514,7 @@ def test_get_slow_movers_threshold_and_fefo_expiry_sort(db: Session, owner_user:
     # Active order 5 days ago for var_active
     o_active = Order(
         order_number=f"ORD-ACT-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=5),
     )
     db.add(o_active)
@@ -524,7 +524,7 @@ def test_get_slow_movers_threshold_and_fefo_expiry_sort(db: Session, owner_user:
     # Old order 45 days ago for var_slow
     o_old = Order(
         order_number=f"ORD-OLD-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=45),
     )
     db.add(o_old)
@@ -557,7 +557,7 @@ def test_get_slow_movers_threshold_and_fefo_expiry_sort(db: Session, owner_user:
     b4 = ProductionBatch(
         variant_id=var_never.id,
         batch_code=f"B-HELD-{uuid.uuid4().hex[:6]}",
-        status="hold",
+        status="on_hold",
         expiry_date=today + timedelta(days=30),
     )
     # B5 for var_slow: available = 0 -> should be EXCLUDED

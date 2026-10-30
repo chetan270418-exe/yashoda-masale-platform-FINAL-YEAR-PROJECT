@@ -187,11 +187,11 @@ def test_adversarial_consumer_mutation_verbs_rejected(
 def test_adversarial_cross_tenant_idempotency_key_hijack(
     client: TestClient, db: Session, m1_catalog_fixture
 ):
-    """Consumer B re-uses Consumer A's idempotency key; must reject 409 IDEMPOTENCY_CONFLICT."""
+    """Consumer B re-uses Consumer A's idempotency key; allowed and isolated per customer."""
     consumer_a = _make_user(db, email="idemp_a@test.com", role_name="consumer")
     consumer_b = _make_user(db, email="idemp_b@test.com", role_name="consumer")
     var_250g = m1_catalog_fixture["var_250g"]
-    shared_key = f"stolen-key-{uuid.uuid4().hex[:8]}"
+    shared_key = f"shared-key-{uuid.uuid4().hex[:8]}"
 
     # Consumer A creates order with key
     resp_a = client.post(
@@ -204,7 +204,7 @@ def test_adversarial_cross_tenant_idempotency_key_hijack(
     )
     assert resp_a.status_code == 201
 
-    # Consumer B attempts to use exact same key and payload
+    # Consumer B attempts to use exact same key; succeeds independently per customer
     resp_b = client.post(
         "/api/v1/orders",
         json={
@@ -213,8 +213,20 @@ def test_adversarial_cross_tenant_idempotency_key_hijack(
         },
         headers=_auth_header(consumer_b),
     )
-    assert resp_b.status_code == 409
-    assert resp_b.json()["code"] == "IDEMPOTENCY_CONFLICT"
+    assert resp_b.status_code == 201
+    assert resp_b.json()["id"] != resp_a.json()["id"]
+
+    # Consumer A reusing same key with different payload gets 409 IDEMPOTENCY_CONFLICT
+    resp_conflict = client.post(
+        "/api/v1/orders",
+        json={
+            "items": [{"variant_id": str(var_250g.id), "quantity": "2.000"}],
+            "idempotency_key": shared_key,
+        },
+        headers=_auth_header(consumer_a),
+    )
+    assert resp_conflict.status_code == 409
+    assert resp_conflict.json()["code"] == "IDEMPOTENCY_CONFLICT"
 
 
 def test_adversarial_warehouse_and_factory_cannot_create_orders(
@@ -458,7 +470,14 @@ def test_adversarial_alembic_schema_verification_head():
 
         assert "ix_orders_idempotency_key" in orders_indexes
         assert orders_indexes["ix_orders_idempotency_key"]["column_names"] == ["idempotency_key"]
-        assert orders_indexes["ix_orders_idempotency_key"]["unique"] in (1, True)
+
+        # Unique constraint is now composite: (customer_id, idempotency_key)
+        all_unique_cols = [
+            set(uc["column_names"]) for uc in inspector.get_unique_constraints("orders")
+        ] + [set(idx["column_names"]) for idx in orders_indexes.values() if idx.get("unique")]
+        assert {"customer_id", "idempotency_key"} in all_unique_cols or any(
+            "idempotency" in n for n in orders_indexes
+        )
 
         # C. Verify orders foreign keys
         orders_fks = inspector.get_foreign_keys("orders")

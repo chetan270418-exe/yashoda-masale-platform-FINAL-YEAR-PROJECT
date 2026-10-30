@@ -55,11 +55,20 @@ def generate(out,seed):
     sales=[]
     for pi,p in enumerate(products,1):
         base=rng.uniform(4,42);price=float(variants[(pi-1)*5]["list_price_inr"])/10
+        # Per-product seasonal profile: amplitude scales how strong this
+        # product's seasonal swing is, phase shifts its peak month. Without
+        # this every product shares one seasonal curve and any forecasting
+        # model looks better than it really is.
+        amp=rng.uniform(.55,1.45);phase=rng.randint(0,11)
         for offset in range(730):
-            d=start+timedelta(days=offset);season=1.22 if d.month in (10,11,12) else (1.12 if d.month in (3,4) else 1);weekend=1.1 if d.weekday()>=5 else 1
+            d=start+timedelta(days=offset)
+            sm=((d.month-1-phase)%12)+1
+            base_s=1.22 if sm in (10,11,12) else (1.12 if sm in (3,4) else 1)
+            season=1+(base_s-1)*amp;weekend=1.1 if d.weekday()>=5 else 1
             qty=max(0,round(base*season*weekend*rng.uniform(.45,1.65)))
             sales.append(dict(date=d.isoformat(),product_id=p["product_id"],units_sold=qty,revenue_inr=f"{qty*price:.2f}",source="synthetic_simulation"))
     write(out/"sales_history_daily.csv",sales,list(sales[0]))
+    write(out/"sales_history.csv",sales,list(sales[0]))
     counts={n:len(rows) for n,rows in [("products",products),("variants",variants),("suppliers",suppliers),("warehouses",warehouses),("production_batches",batches),("inventory_balances",balances),("stock_movements",moves),("dealers",dealers),("orders",orders),("order_items",items),("sales_history_daily",sales)]}
     (out/"manifest.json").write_text(json.dumps({"dataset_type":"synthetic_demo_data","seed":seed,"as_of_date":AS_OF.isoformat(),"warning":"All records are fictional; not actual sponsor data.","record_counts":counts},indent=2),encoding="utf-8")
     return counts

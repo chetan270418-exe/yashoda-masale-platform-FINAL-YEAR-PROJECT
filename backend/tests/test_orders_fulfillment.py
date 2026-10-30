@@ -186,6 +186,7 @@ def _deliver_order(client: TestClient, db: Session, order_id: str, staff: User) 
     if resp.status_code == 200:
         return
     from app.orders.service import update_order_status
+
     update_order_status(db, uuid.UUID(order_id), "delivered", actor_id=staff.id)
 
 
@@ -200,8 +201,8 @@ def test_invariant_b1_cannot_reserve_or_dispatch_unreleased_batch(
     staff = _make_user(db, email="b1_staff@test.com", role_name="warehouse")
     var_a = fulfillment_catalog["var_a"]
 
-    # 1. Batches with status 'hold' and 'rejected'
-    _create_batch_and_balance(db, warehouse, var_a, "B1-HOLD", 30, on_hand=10, status="hold")
+    # 1. Batches with status 'on_hold' and 'rejected'
+    _create_batch_and_balance(db, warehouse, var_a, "B1-HOLD", 30, on_hand=10, status="on_hold")
     _create_batch_and_balance(db, warehouse, var_a, "B1-REJ", 40, on_hand=10, status="rejected")
 
     order_data = _create_order_via_api(client, consumer, var_a.id, quantity="2.000")
@@ -240,7 +241,7 @@ def test_invariant_b1_cannot_reserve_or_dispatch_unreleased_batch(
     assert resp_pack.json()["status"] == "packed"
 
     # Quality hold placed on batch after packing
-    batch_rel.status = "hold"
+    batch_rel.status = "on_hold"
     db.commit()
 
     # Staff attempts dispatch -> MUST FAIL with BATCH_NOT_RELEASED (Invariant B1)
@@ -265,7 +266,7 @@ def test_invariants_b2_and_b3_fefo_allocation_and_multi_batch_split(
     # Expired batch: expiry -5 days, on_hand=10 (MUST BE EXCLUDED)
     _create_batch_and_balance(db, warehouse, var_a, "FEFO-EXP", -5, on_hand=10, status="released")
     # Held batch: expiry +5 days, on_hand=10 (MUST BE EXCLUDED)
-    _create_batch_and_balance(db, warehouse, var_a, "FEFO-HELD", 5, on_hand=10, status="hold")
+    _create_batch_and_balance(db, warehouse, var_a, "FEFO-HELD", 5, on_hand=10, status="on_hold")
     # Batch R1: expiry +10 days, on_hand=5 (EARLIEST ELIGIBLE)
     _, bal_r1 = _create_batch_and_balance(
         db, warehouse, var_a, "FEFO-R1", 10, on_hand=5, status="released"
@@ -351,9 +352,7 @@ def test_invariant_b4_insufficient_stock_rollback(
 
     # Zero reservations and zero ledger movements created
     res_count = db.scalar(
-        select(StockReservation)
-        .join(OrderItem)
-        .where(OrderItem.order_id == uuid.UUID(order_id))
+        select(StockReservation).join(OrderItem).where(OrderItem.order_id == uuid.UUID(order_id))
     )
     assert res_count is None
 
@@ -394,9 +393,7 @@ def test_invariant_b5_dispatch_decrements_balances_and_records_movements(
 
     # Check reservation status: consumed
     reservation = db.scalar(
-        select(StockReservation)
-        .join(OrderItem)
-        .where(OrderItem.order_id == uuid.UUID(order_id))
+        select(StockReservation).join(OrderItem).where(OrderItem.order_id == uuid.UUID(order_id))
     )
     assert reservation.status == "consumed"
 
@@ -454,9 +451,7 @@ def test_invariant_b6_cancellation_releases_reservations_cas_exactly_once(
 
     # Reservation status updated to released
     reservation = db.scalar(
-        select(StockReservation)
-        .join(OrderItem)
-        .where(OrderItem.order_id == uuid.UUID(order_id))
+        select(StockReservation).join(OrderItem).where(OrderItem.order_id == uuid.UUID(order_id))
     )
     assert reservation.status == "released"
 
@@ -739,9 +734,7 @@ def test_rbac_customer_and_dealer_cannot_access_fulfillment_endpoints(
     _make_user(db, email="rbac_staff@test.com", role_name="warehouse")
     var_a = fulfillment_catalog["var_a"]
 
-    _create_batch_and_balance(
-        db, warehouse, var_a, "RBAC-BATCH", 30, on_hand=10, status="released"
-    )
+    _create_batch_and_balance(db, warehouse, var_a, "RBAC-BATCH", 30, on_hand=10, status="released")
     order_data = _create_order_via_api(client, consumer, var_a.id, quantity="1.000")
     order_id = order_data["id"]
 
@@ -764,9 +757,7 @@ def test_rbac_customer_and_dealer_cannot_access_fulfillment_endpoints(
         assert r3.json()["code"] == "FORBIDDEN"
 
         # /return -> 403
-        r4 = client.post(
-            f"/api/v1/orders/{order_id}/return", json={"reason": "bad"}, headers=h
-        )
+        r4 = client.post(f"/api/v1/orders/{order_id}/return", json={"reason": "bad"}, headers=h)
         assert r4.status_code == 403
         assert r4.json()["code"] == "FORBIDDEN"
 
@@ -861,11 +852,14 @@ def test_rbac_staff_can_fulfill_and_cancel_any_order(
     ord2 = _create_order_via_api(client, dealer, var_a.id, quantity="1.000")
     r4 = client.post(f"/api/v1/orders/{ord2['id']}/reserve", headers=_auth_header(owner_staff))
     assert r4.status_code == 200
-    assert client.post(
-        f"/api/v1/orders/{ord2['id']}/cancel",
-        json={"reason": "Owner cancelled"},
-        headers=_auth_header(owner_staff),
-    ).status_code == 200
+    assert (
+        client.post(
+            f"/api/v1/orders/{ord2['id']}/cancel",
+            json={"reason": "Owner cancelled"},
+            headers=_auth_header(owner_staff),
+        ).status_code
+        == 200
+    )
 
 
 def test_rbac_unauthenticated_requests_rejected(client: TestClient, fulfillment_catalog):

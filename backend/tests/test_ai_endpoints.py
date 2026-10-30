@@ -96,7 +96,7 @@ def test_draft_approval_lifecycle_creates_order(client: TestClient, auth_headers
     order_id = uuid.UUID(res_data["order_id"])
     created_order = db.scalar(select(Order).where(Order.id == order_id))
     assert created_order is not None
-    assert created_order.status == "open"
+    assert created_order.status == "pending"
 
 
 def test_forecasts_and_reorder_recommendations_rbac(client: TestClient, auth_headers):

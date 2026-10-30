@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.ai import router as ai_router
+from app.analytics.router import router as analytics_router
 from app.api.v1 import auth, health
 from app.catalog import router as catalog_router
 from app.core.config import get_settings
@@ -11,6 +12,9 @@ from app.core.errors import register_error_handlers
 from app.core.logging import register_request_logging
 from app.inventory import router as inventory_router
 from app.orders import router as orders_router
+from app.procurement.router import router as procurement_router
+from app.production.router import router as production_router
+from app.traceability.router import router as traceability_router
 
 
 def create_app() -> FastAPI:
@@ -31,6 +35,10 @@ def create_app() -> FastAPI:
     app.include_router(inventory_router.router)
     app.include_router(orders_router)
     app.include_router(ai_router.router)
+    app.include_router(procurement_router)
+    app.include_router(production_router)
+    app.include_router(traceability_router)
+    app.include_router(analytics_router)
     return app
 
 

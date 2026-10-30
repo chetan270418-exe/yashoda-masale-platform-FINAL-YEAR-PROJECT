@@ -105,6 +105,10 @@ class ForecastEvaluation(Base):
     mae: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
     rmse: Mapped[Decimal] = mapped_column(Numeric(12, 4), nullable=False)
     mape: Mapped[Decimal | None] = mapped_column(Numeric(12, 4), nullable=True)
+    # Scale-free skill score against the seasonal naive baseline:
+    # MASE = MAE(model) / MAE(seasonal naive, in-sample). Below 1 means the
+    # model beat the baseline. Nullable because it needs the baseline MAE.
+    mase: Mapped[Decimal | None] = mapped_column(Numeric(12, 4), nullable=True)
     test_period: Mapped[str] = mapped_column(String(60), nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     created_at: Mapped[datetime] = mapped_column(

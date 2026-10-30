@@ -20,6 +20,11 @@ class SourceCitation(BaseModel):
 class ChatResponse(BaseModel):
     answer: str
     sources: list[SourceCitation] = Field(default_factory=list)
+    # The subset of `sources` the answer actually cited, and the number of
+    # citation labels the model invented. A non-zero count means part of the
+    # answer was not grounded in the approved context.
+    cited_sources: list[SourceCitation] = Field(default_factory=list)
+    invalid_citations: int = 0
 
 
 class AgentQueryRequest(BaseModel):
@@ -37,6 +42,12 @@ class DraftApprovalResponse(BaseModel):
     status: str
     message: str
     order_id: uuid.UUID | None = None
+    # Reservation outcome for the approved order. "reserved" means stock was
+    # allocated by FEFO; "not_reserved" means the order was created but could not
+    # be fulfilled from current stock and stays in 'pending' status. The outcome is
+    # never silent: it is reported here and written to the audit log.
+    reservation_status: str = "reserved"
+    reservation_message: str | None = None
 
 
 class ForecastEvaluationItem(BaseModel):
@@ -47,6 +58,9 @@ class ForecastEvaluationItem(BaseModel):
     mape: Decimal | None
     test_period: str
     notes: str | None
+    # Scale-free skill score against the seasonal naive baseline. Below 1 means
+    # the model beat the baseline.
+    mase: Decimal | None = None
 
 
 class ReorderRecommendationItem(BaseModel):

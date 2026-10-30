@@ -26,6 +26,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
 from app.orders.models import Order, OrderItem
+from app.production.state_machine import BATCH_STATUS_VALUES
 
 
 class Warehouse(Base):
@@ -63,7 +64,7 @@ class ProductionBatch(Base):
     manufactured_at: Mapped[date | None] = mapped_column(Date, nullable=True)
     expiry_date: Mapped[date] = mapped_column(Date, nullable=False)
     status: Mapped[str] = mapped_column(
-        String(20), default="hold", server_default="hold", nullable=False
+        String(20), default="draft", server_default="draft", nullable=False
     )
     public_token: Mapped[str | None] = mapped_column(String(128), unique=True, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -79,7 +80,7 @@ class ProductionBatch(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('hold','released','rejected','recalled')",
+            "status IN (" + ",".join(f"'{value}'" for value in BATCH_STATUS_VALUES) + ")",
             name="ck_production_batches_status",
         ),
         CheckConstraint(
@@ -91,7 +92,6 @@ class ProductionBatch(Base):
 
     def __repr__(self) -> str:
         return f"<ProductionBatch {self.batch_code} status={self.status}>"
-
 
 
 class InventoryBalance(Base):

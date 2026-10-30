@@ -499,7 +499,7 @@ def test_adv_sales_summary_cancelled_order_isolation_across_all_periods(
     # 1. Shipped order: 15 qty, 2 days ago
     o1 = Order(
         order_number=f"ORD-OK-{uuid.uuid4().hex[:6]}",
-        status="shipped",
+        status="dispatched",
         created_at=now - timedelta(days=2),
     )
     db.add(o1)
@@ -539,7 +539,7 @@ def test_adv_sales_summary_non_cancelled_statuses_included(db: Session, owner_us
     _, _, var = _create_catalog_item(db, prices={"MRP": Decimal("100.00")})
     now = datetime.now(UTC)
 
-    statuses = ["open", "reserved", "partially_shipped", "shipped"]
+    statuses = ["pending", "reserved", "packed", "dispatched"]
     for idx, st in enumerate(statuses, 1):
         ord_obj = Order(
             order_number=f"ORD-{st}-{uuid.uuid4().hex[:6]}",
@@ -584,7 +584,7 @@ def test_adv_sales_summary_precise_period_boundary_windows(db: Session, owner_us
     for days_ago, qty in offsets_and_qtys:
         o = Order(
             order_number=f"ORD-BND-{days_ago}-{uuid.uuid4().hex[:6]}",
-            status="shipped",
+            status="dispatched",
             created_at=now - timedelta(days=days_ago),
         )
         db.add(o)
@@ -626,7 +626,7 @@ def test_adv_sales_summary_group_by_hierarchy_aggregation(db: Session, owner_use
     db.add_all([v1_1, v1_2, v2_1, v3_1])
     db.flush()
 
-    ord1 = Order(order_number=f"ORD-AGG-{uuid.uuid4().hex[:6]}", status="shipped")
+    ord1 = Order(order_number=f"ORD-AGG-{uuid.uuid4().hex[:6]}", status="dispatched")
     db.add(ord1)
     db.flush()
 
@@ -809,7 +809,7 @@ def test_adv_slow_movers_batch_status_and_zero_stock_isolation(db: Session, owne
     b_hold = ProductionBatch(
         variant_id=var.id,
         batch_code=f"B-HOLD-{uuid.uuid4().hex[:6]}",
-        status="hold",
+        status="on_hold",
         expiry_date=today + timedelta(days=40),
     )
     # 2. Rejected batch
@@ -823,7 +823,7 @@ def test_adv_slow_movers_batch_status_and_zero_stock_isolation(db: Session, owne
     b_rec = ProductionBatch(
         variant_id=var.id,
         batch_code=f"B-REC-{uuid.uuid4().hex[:6]}",
-        status="recalled",
+        status="on_hold",
         expiry_date=today + timedelta(days=60),
     )
     # 4. Zero available batch (on_hand = 10, reserved = 10)

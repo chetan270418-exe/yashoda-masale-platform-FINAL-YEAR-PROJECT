@@ -12,6 +12,9 @@ from app.core.config import get_settings
 from app.core.db import Base
 from app.inventory import models as inventory_models  # noqa: F401
 from app.orders import models as orders_models  # noqa: F401
+from app.procurement import models as procurement_models  # noqa: F401
+from app.production import models as production_models  # noqa: F401
+from app.traceability import models as traceability_models  # noqa: F401
 
 config = context.config
 if not config.get_main_option("sqlalchemy.url"):

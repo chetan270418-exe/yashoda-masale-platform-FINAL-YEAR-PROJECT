@@ -16,16 +16,39 @@ The synthetic dataset was engineered to evaluate and stress-test the Yashoda Spi
 
 ### 1.1 Demand Generation Mathematical Formulation
 
-Sales demand for each variant across the 730-day (24-month) simulation follows the multiplicative time-series decomposition:
+Two demand models exist in this project and they are deliberately different. Both are entirely synthetic and both are reproducible from a fixed seed.
 
-$$\text{Demand}(t) = \text{Base} \times \text{Trend}(t) \times \text{Season}(m(t)) \times \text{Festival}(t) \times \text{Noise}(t)$$
+#### 1.1.1 Daily demo dataset (`scripts/generate_data.py`)
+
+The 730-day daily sales history shipped in this folder uses a multiplicative model:
+
+$$\text{Demand}(t) = \max\left(0,\ \text{round}\left(\text{Base} \times \text{Season}(m) \times \text{Weekend}(t) \times \text{Noise}(t)\right)\right)$$
 
 Where:
-- $\text{Base} \in [10, 80]$ units/day depending on spice family (e.g., Turmeric & Red Chilli high volume; Garam Masala moderate).
-- $\text{Trend}(t) = 1.0 + 0.20 \times \left(\frac{t}{730}\right)$ reflects a steady $20\%$ business growth over 2 years.
-- $\text{Season}(m) \in [0.85, 1.30]$ models Indian climate demand (winter spice surge in Nov–Jan, monsoon dip in Jul–Aug).
-- $\text{Festival}(t) \in [1.25, 1.80]$ simulates festive demand multipliers during Ganesh Chaturthi, Navratri, and Diwali.
-- $\text{Noise}(t) \sim \mathcal{N}(1.0, 0.08)$ introduces realistic bounded variance ($\pm 10\%$).
+- $\text{Base} \sim U(4, 42)$ units/day, drawn once per product.
+- $\text{Season}(m)$ is **per product**. A shared Indian climate curve $s$ (1.22 in Oct–Dec, 1.12 in Mar–Apr, 1.00 otherwise) is scaled by a per-product amplitude $a \sim U(0.55, 1.45)$ and shifted by a per-product phase offset $p \in [0, 11]$ months, giving $\text{Season}(m) = 1 + (s(m - p) - 1)\cdot a$. A single shared seasonal curve would make every forecasting model look better than it really is, because the model would only have to learn one global pattern, so the amplitude and phase vary per product.
+- $\text{Weekend}(t) = 1.1$ on Saturday and Sunday, otherwise $1.0$.
+- $\text{Noise}(t) \sim U(0.45, 1.65)$, a wide multiplicative spread reflecting lumpy day-to-day ordering in wholesale spice trade.
+
+#### 1.1.2 Monthly series used by the forecast evaluation (`backend/app/ai/forecasting/generator.py`)
+
+The 24-month monthly series that the M7 forecast evaluation scores uses a richer model:
+
+$$\text{Demand}(t) = \max\left(50,\ \text{Base} \times \text{Trend}(t) \times \text{Season}(m) \times \text{Festival}(t) \times \text{Noise}(t)\right)$$
+
+Where:
+- $\text{Base}$ is the product's monthly demand (default 500 units).
+- $\text{Trend}(t) = 1.0 + 0.15 \times (t/23)$, a $15\%$ growth across 24 months.
+- $\text{Season}(m)$ is per product, using the same amplitude $a \sim U(0.55, 1.45)$ and phase offset $p \in [0, 11]$ as above.
+- $\text{Festival}(t) = 1 + f$ in October and November, where $f \sim U(0, 0.25)$ is the product's festival strength. The festival stays on the calendar month, because Diwali falls in the same month for every spice.
+- $\text{Noise}(t) = 1 + U(-0.08, 0.08)$, a bounded $\pm 8\%$ variation.
+- The floor of 50 units is a business rule of the demo dataset only. It is deliberately **not** reproduced inside the forecasting models, because a model must not assume a minimum order size it was never told about.
+
+The monthly noise is deliberately narrower ($\pm 8\%$) than the daily dataset's, because the forecasting evaluation needs a signal a seasonal model can actually learn. The evaluation reports its own error honestly either way, and the honest result is that the seasonal naive baseline still wins; see `docs/forecast-evaluation/EVALUATION_REPORT.md`.
+
+#### 1.1.3 Reproducibility
+
+Both generators derive their random stream from a fixed seed. The monthly generator derives a per-product seed as `CRC32(SKU) + base seed` rather than using Python's `hash()`, because `hash()` is salted per process and would break reproducibility across runs.
 
 ---
 

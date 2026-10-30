@@ -152,6 +152,7 @@ def reserve_stock_fefo(
     order_item_id: uuid.UUID | str,
     min_shelf_days: int | None = None,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> list[StockReservation]:
     """Reserve stock for an order item using First-Expired, First-Out (FEFO).
 
@@ -164,6 +165,11 @@ def reserve_stock_fefo(
 
     Executes row locking (`FOR UPDATE OF inventory_balances`) in deterministic order
     (`ORDER BY b.expiry_date ASC, b.id ASC`).
+
+    When ``commit=False`` the caller owns the transaction: allocations are only
+    flushed, never committed, and an insufficient-stock failure raises without
+    rolling back the caller's transaction. Use this to compose several line
+    items into a single atomic unit (Invariant B4).
     """
     wh_uuid = _to_uuid(warehouse_id, "warehouse_id")
     variant_uuid = _to_uuid(variant_id, "variant_id")
@@ -254,9 +260,12 @@ def reserve_stock_fefo(
         if need <= Decimal("0"):
             break
 
-    # Invariant B4: If total available < requested_qty, complete rollback and 0 reservations
+    # Invariant B4: If total available < requested_qty, complete rollback and 0 reservations.
+    # When commit=False the caller owns the transaction, so we must NOT roll it back
+    # here: the caller decides whether to abort the whole unit of work.
     if need > Decimal("0"):
-        db.rollback()
+        if commit:
+            db.rollback()
         available_found = qty - need
         raise InsufficientStockError(
             f"Insufficient stock for variant {variant_uuid} in warehouse {wh_uuid}. "
@@ -292,23 +301,33 @@ def reserve_stock_fefo(
         db.add(movement)
         reservations.append(res)
 
-    try:
-        db.commit()
+    if commit:
+        try:
+            db.commit()
+            return reservations
+        except (IntegrityError, StaleDataError) as exc:
+            db.rollback()
+            raise InsufficientStockError(
+                f"Insufficient stock for variant {variant_uuid} due to concurrent update."
+            ) from exc
+        except Exception:
+            db.rollback()
+            raise
+    else:
+        try:
+            db.flush()
+        except (IntegrityError, StaleDataError) as exc:
+            raise InsufficientStockError(
+                f"Insufficient stock for variant {variant_uuid} due to concurrent update."
+            ) from exc
         return reservations
-    except (IntegrityError, StaleDataError) as exc:
-        db.rollback()
-        raise InsufficientStockError(
-            f"Insufficient stock for variant {variant_uuid} due to concurrent update."
-        ) from exc
-    except Exception:
-        db.rollback()
-        raise
 
 
 def cancel_reservation(
     db: Session,
     reservation_id: uuid.UUID | str,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> StockReservation:
     """Cancel an active reservation and release reserved stock exactly once (B6).
 
@@ -370,10 +389,14 @@ def cancel_reservation(
             actor_id=actor_uuid,
         )
         db.add(movement)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         return updated_res
     except Exception:
-        db.rollback()
+        if commit:
+            db.rollback()
         raise
 
 
@@ -381,6 +404,7 @@ def dispatch_reservation(
     db: Session,
     reservation_id: uuid.UUID | str,
     actor_id: uuid.UUID | str | None = None,
+    commit: bool = True,
 ) -> StockReservation:
     """Dispatch an active reservation: consume reservation, deduct on_hand and reserved.
 
@@ -453,10 +477,14 @@ def dispatch_reservation(
             actor_id=actor_uuid,
         )
         db.add(movement)
-        db.commit()
+        if commit:
+            db.commit()
+        else:
+            db.flush()
         return updated_res
     except Exception:
-        db.rollback()
+        if commit:
+            db.rollback()
         raise
 
 

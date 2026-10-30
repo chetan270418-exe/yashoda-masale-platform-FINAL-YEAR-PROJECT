@@ -19,12 +19,20 @@ from app.core.db import get_db
 from app.core.errors import AppError
 from app.orders import service
 from app.orders.schemas import (
+    InvoiceCreate,
+    InvoiceRead,
     OrderCancelRequest,
     OrderCreate,
     OrderDispatchRequest,
     OrderRead,
     OrderReserveRequest,
     OrderReturnRequest,
+    PaymentRecordRequest,
+    ShipmentCreate,
+    ShipmentEventCreate,
+    ShipmentEventRead,
+    ShipmentRead,
+    ShipmentStatusUpdateRequest,
 )
 
 router = APIRouter(prefix="/api/v1/orders", tags=["orders"])
@@ -35,7 +43,6 @@ ORDER_CREATION_ROLES = {"consumer", "dealer", "distributor", "owner"}
 FULFILLMENT_ROLES = {"owner", "warehouse"}
 
 require_fulfillment_staff = require_roles("owner", "warehouse")
-
 
 
 @router.post(
@@ -295,12 +302,290 @@ def update_status(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_fulfillment_staff)],
 ) -> OrderRead:
-    """Update order status directly (e.g. delivered)."""
+    """Update order status directly. Only 'delivered' is permitted via PATCH.
+
+    For reserve, pack, dispatch, cancel and return, dedicated endpoints must be used
+    so inventory balance and ledger movements are correctly executed.
+    """
+    target = payload.status.strip().lower()
+    if target != service.OrderStatus.DELIVERED.value:
+        raise AppError(
+            code="USE_DEDICATED_ENDPOINT",
+            message=(
+                f"Status '{target}' cannot be updated via PATCH /orders/{{id}}/status. "
+                "Use the dedicated lifecycle endpoint: "
+                "/reserve, /pack, /dispatch, /cancel, or /return."
+            ),
+            status_code=400,
+            details={
+                "target_status": target,
+                "allowed": [service.OrderStatus.DELIVERED.value],
+            },
+        )
+
     order = service.update_order_status(
         db=db,
         order_id=order_id,
-        target_status=payload.status,
+        target_status=service.OrderStatus.DELIVERED.value,
         actor_id=current_user.id,
     )
     return OrderRead.model_validate(order)
 
+
+# -----------------------------------------------------------------------------
+# Milestone M5 / T-052: Invoices Endpoints
+# -----------------------------------------------------------------------------
+
+
+@router.post(
+    "/{order_id}/invoices",
+    response_model=InvoiceRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Issue an invoice for an order (Milestone M5 / T-052)",
+)
+def create_order_invoice(
+    order_id: uuid.UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_fulfillment_staff)],
+    payload: Annotated[InvoiceCreate | None, Body()] = None,
+) -> InvoiceRead:
+    """Issue a billing invoice for an order. Fulfillment staff only."""
+    notes = payload.notes if payload else None
+    invoice = service.create_invoice_for_order(
+        db=db,
+        order_id=order_id,
+        notes=notes,
+        actor_id=current_user.id,
+    )
+    return InvoiceRead.model_validate(invoice)
+
+
+@router.get(
+    "/{order_id}/invoices",
+    response_model=InvoiceRead,
+    summary="Get invoice for an order",
+)
+def get_order_invoice(
+    order_id: uuid.UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> InvoiceRead:
+    """Retrieve invoice for an order. Customers can only view own invoices."""
+    order = service.get_order_by_id(db, order_id)
+    if not order:
+        raise AppError("ORDER_NOT_FOUND", f"Order '{order_id}' was not found.", 404)
+
+    user_role = current_user.role.name if current_user.role else ""
+    if user_role not in STAFF_ROLES and order.customer_id != current_user.id:
+        raise AppError("FORBIDDEN", "You do not have permission to view this invoice.", 403)
+
+    invoice = service.get_invoice_by_order_id(db, order_id)
+    if not invoice:
+        raise AppError("INVOICE_NOT_FOUND", f"No invoice issued for order '{order_id}'.", 404)
+
+    return InvoiceRead.model_validate(invoice)
+
+
+@router.get(
+    "/invoices/all",
+    response_model=list[InvoiceRead],
+    summary="List invoices with role scoping",
+)
+def list_invoices(
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    payment_status: str | None = Query(None, description="Filter by payment status"),
+    limit: int = Query(50, ge=1, le=100),
+    offset: int = Query(0, ge=0),
+) -> list[InvoiceRead]:
+    """List invoices. Customers see only their own; staff see all."""
+    user_role = current_user.role.name if current_user.role else ""
+    effective_customer_id = current_user.id if user_role in CUSTOMER_ROLES else None
+
+    invoices = service.list_invoices(
+        db=db,
+        customer_id=effective_customer_id,
+        payment_status=payment_status,
+        limit=limit,
+        offset=offset,
+    )
+    return [InvoiceRead.model_validate(inv) for inv in invoices]
+
+
+@router.get(
+    "/invoices/{invoice_id}",
+    response_model=InvoiceRead,
+    summary="Get invoice by ID",
+)
+def get_invoice(
+    invoice_id: uuid.UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> InvoiceRead:
+    """Retrieve invoice by UUID."""
+    invoice = service.get_invoice_by_id(db, invoice_id)
+    if not invoice:
+        raise AppError("INVOICE_NOT_FOUND", f"Invoice '{invoice_id}' was not found.", 404)
+
+    user_role = current_user.role.name if current_user.role else ""
+    if user_role not in STAFF_ROLES and invoice.customer_id != current_user.id:
+        raise AppError("FORBIDDEN", "You do not have permission to view this invoice.", 403)
+
+    return InvoiceRead.model_validate(invoice)
+
+
+@router.post(
+    "/invoices/{invoice_id}/pay",
+    response_model=InvoiceRead,
+    summary="Record simulated payment for an invoice (Rule 91, D-009)",
+)
+def pay_invoice(
+    invoice_id: uuid.UUID,
+    payload: PaymentRecordRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> InvoiceRead:
+    """Record simulated payment for an invoice.
+
+    Payments are simulated; no card data is stored or accepted (Rule 91, D-009).
+    """
+    invoice = service.get_invoice_by_id(db, invoice_id)
+    if not invoice:
+        raise AppError("INVOICE_NOT_FOUND", f"Invoice '{invoice_id}' was not found.", 404)
+
+    user_role = current_user.role.name if current_user.role else ""
+    if user_role not in STAFF_ROLES and invoice.customer_id != current_user.id:
+        raise AppError("FORBIDDEN", "You do not have permission to pay this invoice.", 403)
+
+    updated_invoice = service.record_invoice_payment(
+        db=db,
+        invoice_id=invoice_id,
+        amount=payload.amount,
+        payment_method=payload.payment_method,
+        reference=payload.payment_reference,
+        notes=payload.notes,
+        actor_id=current_user.id,
+    )
+    return InvoiceRead.model_validate(updated_invoice)
+
+
+# -----------------------------------------------------------------------------
+# Milestone M5 / T-052: Shipments Endpoints
+# -----------------------------------------------------------------------------
+
+
+@router.post(
+    "/{order_id}/shipments",
+    response_model=ShipmentRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create shipment for an order (Milestone M5 / T-052)",
+)
+def create_shipment(
+    order_id: uuid.UUID,
+    payload: ShipmentCreate,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_fulfillment_staff)],
+) -> ShipmentRead:
+    """Create a logistics consignment shipment for an order."""
+    shipment = service.create_shipment(
+        db=db,
+        order_id=order_id,
+        carrier=payload.carrier,
+        tracking_ref=payload.tracking_ref,
+        notes=payload.notes,
+        actor_id=current_user.id,
+    )
+    return ShipmentRead.model_validate(shipment)
+
+
+@router.get(
+    "/{order_id}/shipments",
+    response_model=list[ShipmentRead],
+    summary="Get shipments for an order",
+)
+def get_order_shipments(
+    order_id: uuid.UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> list[ShipmentRead]:
+    """Retrieve all shipments for an order with event timeline."""
+    order = service.get_order_by_id(db, order_id)
+    if not order:
+        raise AppError("ORDER_NOT_FOUND", f"Order '{order_id}' was not found.", 404)
+
+    user_role = current_user.role.name if current_user.role else ""
+    if user_role not in STAFF_ROLES and order.customer_id != current_user.id:
+        raise AppError("FORBIDDEN", "You do not have permission to view these shipments.", 403)
+
+    shipments = service.get_shipments_by_order_id(db, order_id)
+    return [ShipmentRead.model_validate(s) for s in shipments]
+
+
+@router.get(
+    "/shipments/{shipment_id}",
+    response_model=ShipmentRead,
+    summary="Get shipment details by ID",
+)
+def get_shipment(
+    shipment_id: uuid.UUID,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> ShipmentRead:
+    """Retrieve shipment details and timeline events."""
+    shipment = service.get_shipment_by_id(db, shipment_id)
+    if not shipment:
+        raise AppError("SHIPMENT_NOT_FOUND", f"Shipment '{shipment_id}' was not found.", 404)
+
+    order = service.get_order_by_id(db, shipment.order_id)
+    user_role = current_user.role.name if current_user.role else ""
+    if user_role not in STAFF_ROLES and (not order or order.customer_id != current_user.id):
+        raise AppError("FORBIDDEN", "You do not have permission to view this shipment.", 403)
+
+    return ShipmentRead.model_validate(shipment)
+
+
+@router.patch(
+    "/shipments/{shipment_id}/status",
+    response_model=ShipmentRead,
+    summary="Update shipment status and append checkpoint event",
+)
+def update_shipment_status(
+    shipment_id: uuid.UUID,
+    payload: ShipmentStatusUpdateRequest,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_fulfillment_staff)],
+) -> ShipmentRead:
+    """Update shipment status and add checkpoint event. Staff only."""
+    shipment = service.update_shipment_status(
+        db=db,
+        shipment_id=shipment_id,
+        status=payload.status,
+        location=payload.location,
+        description=payload.description,
+        actor_id=current_user.id,
+    )
+    return ShipmentRead.model_validate(shipment)
+
+
+@router.post(
+    "/shipments/{shipment_id}/events",
+    response_model=ShipmentEventRead,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add a checkpoint event to a shipment",
+)
+def add_shipment_event(
+    shipment_id: uuid.UUID,
+    payload: ShipmentEventCreate,
+    db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User, Depends(require_fulfillment_staff)],
+) -> ShipmentEventRead:
+    """Add a tracking event to a shipment timeline. Staff only."""
+    event = service.add_shipment_event(
+        db=db,
+        shipment_id=shipment_id,
+        event_type=payload.event_type,
+        description=payload.description,
+        location=payload.location,
+        actor_id=current_user.id,
+    )
+    return ShipmentEventRead.model_validate(event)

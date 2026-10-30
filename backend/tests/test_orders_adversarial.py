@@ -122,7 +122,7 @@ def _auth(user) -> dict[str, str]:
 
 
 def test_state_machine_exhaustive_64_transition_matrix(db: Session):
-    """Exhaustively test all 64 possible pairwise state transitions across all 8 statuses."""
+    """Exhaustively test all 49 possible transitions across 7 canonical statuses."""
     all_statuses = [
         OrderStatus.PENDING.value,
         OrderStatus.RESERVED.value,
@@ -131,7 +131,6 @@ def test_state_machine_exhaustive_64_transition_matrix(db: Session):
         OrderStatus.DELIVERED.value,
         OrderStatus.CANCELLED.value,
         OrderStatus.RETURNED.value,
-        OrderStatus.OPEN.value,
     ]
 
     for current in all_statuses:
@@ -155,7 +154,7 @@ def test_state_machine_exhaustive_64_transition_matrix(db: Session):
     [
         ("  PENDING  ", "  RESERVED  ", "reserved"),
         ("Pending", "Cancelled", "cancelled"),
-        ("\topen\n", "\treserved\t", "reserved"),
+        ("\tpending\n", "\treserved\t", "reserved"),
         ("RESERVED", "PACKED", "packed"),
         ("packed", "DISPATCHED", "dispatched"),
         ("dispatched", " Delivered ", "delivered"),
@@ -240,7 +239,7 @@ def test_idempotency_conflicts_matrix(client: TestClient, db: Session, catalog_s
     )
     assert resp.status_code == 201
 
-    # Conflict 1: Different user submitting same key
+    # Scenario 1: Different user submitting same key creates order (composite unique key)
     resp_c1 = client.post(
         "/api/v1/orders",
         json={
@@ -250,10 +249,10 @@ def test_idempotency_conflicts_matrix(client: TestClient, db: Session, catalog_s
         },
         headers=_auth(user_b),
     )
-    assert resp_c1.status_code == 409
-    assert resp_c1.json()["code"] == "IDEMPOTENCY_CONFLICT"
+    assert resp_c1.status_code == 201
+    assert resp_c1.json()["id"] != resp.json()["id"]
 
-    # Conflict 2: Same user, different variant
+    # Conflict 1: Same user, different variant
     resp_c2 = client.post(
         "/api/v1/orders",
         json={
