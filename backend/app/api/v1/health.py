@@ -20,11 +20,14 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.auth.dependencies import require_roles
+from app.auth.models import User
 from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.errors import AppError
 
 router = APIRouter(tags=["health"])
+require_owner = require_roles("owner")
 
 _START_TIME = time.time()
 
@@ -63,8 +66,11 @@ def health_db(db: Session = Depends(get_db)) -> dict[str, str]:
 
 
 @router.get("/api/v1/health/detailed")
-def health_detailed(db: Session = Depends(get_db)) -> dict[str, object]:
-    """Comprehensive service telemetry and environment info."""
+def health_detailed(
+    db: Session = Depends(get_db),
+    _owner: User = Depends(require_owner),
+) -> dict[str, object]:
+    """Service telemetry (owner only: it reveals runtime and OS details)."""
     settings = get_settings()
     uptime_seconds = round(time.time() - _START_TIME, 2)
 

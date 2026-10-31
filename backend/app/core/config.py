@@ -48,6 +48,8 @@ class Settings(BaseSettings):
                     "JWT_SECRET must be set and cannot be the default value "
                     "outside the local environment."
                 )
+            if len(self.jwt_secret) < 32:
+                raise ValueError("JWT_SECRET must be at least 32 characters outside local.")
         return self
 
 

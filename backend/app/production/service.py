@@ -374,6 +374,16 @@ def advance_batch(
     current = batch.status
     validate_batch_transition(current, to_status)
     target = to_status.strip().lower()
+    if target == BatchStatus.RELEASED.value:
+        # The quality gate lives in record_quality_decision: a batch may only become
+        # 'released' through a quality decision that checks every active parameter.
+        raise AppError(
+            "USE_QUALITY_DECISION",
+            "A batch can only be released through a quality decision, which checks that "
+            "every active quality parameter has a passing check.",
+            400,
+            details={"current_status": current, "target_status": target},
+        )
 
     before = {"status": current}
     batch.status = target

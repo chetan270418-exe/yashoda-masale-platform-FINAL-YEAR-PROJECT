@@ -107,12 +107,6 @@ def test_health_ready_probe_fails_when_db_down():
     assert r.json()["code"] == "DB_UNAVAILABLE"
 
 
-def test_health_detailed_metrics():
+def test_health_detailed_requires_authentication():
     r = client.get("/api/v1/health/detailed")
-    assert r.status_code == 200
-    body = r.json()
-    assert body["status"] == "ok"
-    assert body["database"] == "up"
-    assert "uptime_seconds" in body
-    assert "system" in body
-    assert "python_version" in body["system"]
+    assert r.status_code == 401

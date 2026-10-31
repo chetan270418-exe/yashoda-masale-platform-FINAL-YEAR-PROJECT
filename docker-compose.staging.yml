@@ -45,8 +45,10 @@ services:
       ENVIRONMENT: staging
       DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-yashoda_admin}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-yashoda_masale_staging}
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set for staging}
-      JWT_ALGORITHM: HS256
-      JWT_EXPIRATION_MINUTES: 120
+      ACCESS_TOKEN_EXPIRE_MINUTES: 120
+      # Caddy sits in front of the API: without this every visitor looks like Caddy's IP, so
+      # the login and QR rate limits would be shared by all users.
+      TRUST_PROXY_HEADERS: "true"
       CORS_ORIGINS: ${CORS_ORIGINS:-https://staging.yashodamasale.com,http://localhost:3000}
       APP_NAME: "Yashoda SpiceChain [Staging]"
     healthcheck:

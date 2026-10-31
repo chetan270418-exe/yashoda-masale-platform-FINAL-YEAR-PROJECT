@@ -17,16 +17,18 @@ Security rules honoured here:
 """
 
 import hashlib
+import hmac
 import secrets
 import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.audit.service import log_action
 from app.catalog.models import Product, ProductVariant
+from app.core.config import get_settings
 from app.core.errors import AppError
 from app.inventory.models import ProductionBatch
 from app.traceability.models import (
@@ -86,12 +88,15 @@ def hash_token(token: str) -> str:
 
 
 def hash_ip(ip_address: str | None) -> str:
-    """Return the SHA-256 hex digest of a scanner IP address.
+    """Return a keyed hash of a scanner IP address.
 
     Same reasoning as :func:`hash_token`: the raw address is personal data
     that must not be stored, and the hash is only used to correlate scans.
     """
-    return hashlib.sha256((ip_address or "unknown").encode("utf-8")).hexdigest()
+    # Keyed (HMAC) hash: a plain SHA-256 of an IPv4 address can be reversed by trying all
+    # 4 billion addresses, so the key makes the stored value useless without the secret.
+    key = get_settings().jwt_secret.encode("utf-8")
+    return hmac.new(key, (ip_address or "unknown").encode("utf-8"), hashlib.sha256).hexdigest()
 
 
 def fingerprint(value: str) -> str:
@@ -364,6 +369,14 @@ def list_batch_events(
     )
 
 
+def count_verification_scans(db: Session, *, result: str | None = None) -> int:
+    """Total number of scans (for pagination), optionally filtered by outcome."""
+    query = select(func.count()).select_from(VerificationScan)
+    if result:
+        query = query.where(VerificationScan.result == result)
+    return int(db.scalar(query) or 0)
+
+
 def list_verification_scans(
     db: Session,
     *,
@@ -387,6 +400,7 @@ __all__ = [
     "FORBIDDEN_PUBLIC_CLAIMS",
     "RELEASE_STATUS_LABELS",
     "TOKEN_ENTROPY_BYTES",
+    "count_verification_scans",
     "fingerprint",
     "hash_ip",
     "hash_token",

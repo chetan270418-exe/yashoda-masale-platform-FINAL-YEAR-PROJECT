@@ -16,9 +16,9 @@ import uuid
 from datetime import UTC, datetime
 from decimal import Decimal
 
+import jwt
 import pytest
 from fastapi.testclient import TestClient
-from jose import jwt
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -100,7 +100,11 @@ def test_jwt_signature_tampering_rejected(client: TestClient, db: Session):
     )
 
     # 1. Tampered signature
-    tampered_sig = valid_token[:-1] + ("A" if valid_token[-1] != "A" else "B")
+    # Change the FIRST character of the signature: every bit of it counts. (The last base64
+    # character carries 2 unused bits, so editing it leaves the signature valid ~6% of the time.)
+    header, payload, signature = valid_token.split(".")
+    flipped = ("A" if signature[0] != "A" else "B") + signature[1:]
+    tampered_sig = ".".join([header, payload, flipped])
     resp1 = client.get("/api/v1/orders", headers={"Authorization": f"Bearer {tampered_sig}"})
     assert resp1.status_code == 401
 

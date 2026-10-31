@@ -21,7 +21,7 @@ from app.auth.dependencies import require_roles
 from app.auth.models import User
 from app.core.db import get_db
 from app.core.errors import AppError
-from app.core.rate_limit import RateLimiter
+from app.core.rate_limit import RateLimiter, get_client_ip
 from app.traceability import service
 from app.traceability.schemas import (
     BatchEventCreate,
@@ -67,7 +67,7 @@ def list_scans(
     """Owner only: audit log of every QR scan, newest first."""
     scans = service.list_verification_scans(db, limit=limit, offset=offset, result=result)
     return VerificationScanListResponse(
-        total=len(scans),
+        total=service.count_verification_scans(db, result=result),
         items=[
             VerificationScanRead(
                 id=scan.id,
@@ -193,7 +193,7 @@ def lookup_public_batch(
     the scan log with a null batch id, so a failed lookup reveals nothing
     about whether the token ever existed.
     """
-    client_ip = request.client.host if request.client else None
+    client_ip = get_client_ip(request)
     payload = service.lookup_public_batch(db, public_token=public_token, ip_address=client_ip)
     if payload is None:
         raise AppError(

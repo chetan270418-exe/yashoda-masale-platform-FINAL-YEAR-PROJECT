@@ -88,20 +88,38 @@ def restore_postgres(backup_file: Path, db_url: str) -> None:
     db_name = parsed.path.lstrip("/") or "yashoda_masale"
 
     logger.info("Restoring PostgreSQL database: %s", db_name)
-    pg_restore_cmd = [
-        "pg_restore",
-        "-h",
-        parsed.hostname or "localhost",
-        "-p",
-        str(parsed.port or 5432),
-        "-U",
-        parsed.username or "postgres",
-        "-d",
-        db_name,
-        "--clean",
-        "--if-exists",
-        str(backup_file),
-    ]
+    if backup_file.suffix == ".sql":
+        # plain-text dump: pg_restore cannot read it, psql can
+        pg_restore_cmd = [
+            "psql",
+            "-h",
+            parsed.hostname or "localhost",
+            "-p",
+            str(parsed.port or 5432),
+            "-U",
+            parsed.username or "postgres",
+            "-d",
+            db_name,
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-f",
+            str(backup_file),
+        ]
+    else:
+        pg_restore_cmd = [
+            "pg_restore",
+            "-h",
+            parsed.hostname or "localhost",
+            "-p",
+            str(parsed.port or 5432),
+            "-U",
+            parsed.username or "postgres",
+            "-d",
+            db_name,
+            "--clean",
+            "--if-exists",
+            str(backup_file),
+        ]
 
     env = os.environ.copy()
     if parsed.password:

@@ -71,7 +71,8 @@ def backup_postgres(db_url: str, output_dir: Path, compress: bool = True) -> tup
     timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
     parsed = urlparse(db_url)
     db_name = parsed.path.lstrip("/") or "yashoda_masale"
-    base_name = f"backup_pg_{db_name}_{timestamp}.sql"
+    # custom format (-F c) is a binary archive for pg_restore; plain format is readable SQL
+    base_name = f"backup_pg_{db_name}_{timestamp}.{'dump' if compress else 'sql'}"
     out_file = output_dir / base_name
 
     logger.info("Executing pg_dump for database: %s", db_name)
@@ -91,6 +92,11 @@ def backup_postgres(db_url: str, output_dir: Path, compress: bool = True) -> tup
         str(out_file),
     ]
 
+    if not compress:
+        # plain SQL has no pg_restore --clean: make the script itself drop objects first so it
+        # can be restored over an existing database.
+        pg_dump_cmd += ["--clean", "--if-exists"]
+
     env = os.environ.copy()
     if parsed.password:
         env["PGPASSWORD"] = parsed.password
@@ -98,13 +104,10 @@ def backup_postgres(db_url: str, output_dir: Path, compress: bool = True) -> tup
     try:
         subprocess.run(pg_dump_cmd, env=env, check=True, capture_output=True, text=True)
     except (subprocess.CalledProcessError, FileNotFoundError) as exc:
-        logger.warning(
-            "pg_dump CLI not found or failed (%s). Writing fallback connection metadata dump.",
-            exc,
-        )
-        with open(out_file, "w", encoding="utf-8") as f:
-            f.write(f"-- Yashoda Masale Staging DB Fallback Dump\n-- Database: {db_name}\n")
-            f.write(f"-- Timestamp: {timestamp}\n")
+        # A "backup" that contains no data is worse than no backup: fail loudly.
+        out_file.unlink(missing_ok=True)
+        detail = getattr(exc, "stderr", None) or str(exc)
+        raise RuntimeError(f"pg_dump failed, no backup was created: {detail}") from exc
 
     checksum = compute_sha256(out_file)
     return out_file, checksum

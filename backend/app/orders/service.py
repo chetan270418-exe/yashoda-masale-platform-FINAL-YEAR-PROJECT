@@ -831,13 +831,15 @@ def create_invoice_for_order(
     order_uuid = uuid.UUID(str(order_id))
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
 
-    order = db.scalar(select(Order).where(Order.id == order_uuid))
+    order = db.scalar(select(Order).where(Order.id == order_uuid).with_for_update(of=Order))
     if not order:
         raise AppError("ORDER_NOT_FOUND", f"Order '{order_uuid}' was not found.", 404)
 
     existing = db.scalar(select(Invoice).where(Invoice.order_id == order_uuid))
     if existing:
         return existing
+    if order.status == OrderStatus.CANCELLED.value:
+        raise AppError("ORDER_CANCELLED", "A cancelled order cannot be invoiced.", 400)
 
     invoice = Invoice(
         id=uuid.uuid4(),
@@ -888,12 +890,15 @@ def record_invoice_payment(
     actor_uuid = uuid.UUID(str(actor_id)) if actor_id else None
     pay_amount = Decimal(str(amount)).quantize(Decimal("0.01"))
 
-    invoice = db.scalar(select(Invoice).where(Invoice.id == inv_uuid).with_for_update())
+    invoice = db.scalar(select(Invoice).where(Invoice.id == inv_uuid).with_for_update(of=Invoice))
     if not invoice:
         raise AppError("INVOICE_NOT_FOUND", f"Invoice '{inv_uuid}' was not found.", 404)
 
     if invoice.payment_status == "paid":
         raise AppError("ALREADY_PAID", f"Invoice '{invoice.invoice_number}' is already paid.", 400)
+    linked_order = db.get(Order, invoice.order_id)
+    if linked_order is not None and linked_order.status == OrderStatus.CANCELLED.value:
+        raise AppError("ORDER_CANCELLED", "The order of this invoice was cancelled.", 400)
 
     if pay_amount < invoice.total_amount:
         raise AppError(

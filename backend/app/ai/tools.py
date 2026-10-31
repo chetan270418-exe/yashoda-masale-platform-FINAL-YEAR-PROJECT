@@ -123,7 +123,7 @@ def tool_check_stock(db: Session, user: User, args: dict[str, Any]) -> dict[str,
             "sku": r.sku,
             "product_name": r.product_name,
             "pack_size_g": r.pack_size_g,
-            "available_stock": float(r.total_available),
+            "available_stock": str(r.total_available),
         }
         for r in rows
     ]
